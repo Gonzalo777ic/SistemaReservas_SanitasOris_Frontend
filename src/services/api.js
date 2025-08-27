@@ -7,22 +7,25 @@ const auth0 = new Auth0Client({
   authorizationParams: {
     redirect_uri: window.location.origin,
     audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+    scope: "openid profile email", // agrega aquí si tu API pide scopes adicionales
   },
 });
 
 const api = axios.create({
   baseURL: "http://localhost:8000/api/",
-  withCredentials: true,
+  timeout: 10000, // evita que se quede colgado
 });
 
 api.interceptors.request.use(async (config) => {
   try {
     const token = await auth0.getTokenSilently();
-    config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   } catch (err) {
     console.warn("No se pudo obtener token:", err);
   }
   return config;
 });
 
-export default api;
+export { api, auth0 };

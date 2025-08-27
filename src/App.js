@@ -1,18 +1,17 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
-import DashboardDoctor from "./pages/DashboardDoctor";
+import DashboardPaciente from "./pages/DashboardPaciente";
+import ReservasPacientePage from "./pages/ReservasPacientePage";
 import ReservasPage from "./pages/ReservasPage";
-
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Esta ruta requiere login */}
         <Route
           path="/"
           element={
             <PrivateRoute>
-              <DashboardDoctor />
+              <DashboardPaciente />
             </PrivateRoute>
           }
         />
@@ -21,6 +20,15 @@ function App() {
           element={
             <PrivateRoute>
               <ReservasPage />
+            </PrivateRoute>
+          }
+        />
+        {/* Nueva ruta para pacientes */}
+        <Route
+          path="/reservar"
+          element={
+            <PrivateRoute>
+              <ReservasPacientePage />
             </PrivateRoute>
           }
         />

@@ -4,17 +4,12 @@ import { useAuth0 } from "@auth0/auth0-react";
 export default function PrivateRoute({ children }) {
   const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
-  if (isLoading) {
-    return <p>Cargando...</p>;
-  }
+  if (isLoading) return <div>Cargando...</div>;
 
   if (!isAuthenticated) {
-    // opción 1: redirigir automáticamente al login de Auth0
+    // si no está logueado, lo mando a login
     loginWithRedirect();
     return null;
-
-    // opción 2: mostrar mensaje/botón
-    // return <Navigate to="/login" />;
   }
 
   return children;

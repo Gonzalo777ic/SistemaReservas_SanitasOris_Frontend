@@ -5,20 +5,44 @@ export default function Navbar() {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
 
   return (
-    <nav style={{ padding: "1rem", background: "#eee" }}>
+    <nav style={{ padding: "1rem", background: "#f5f5f5" }}>
       {isAuthenticated ? (
         <>
-          <span>Hola, {user?.name}</span>
+          <span style={{ marginRight: "1rem" }}>
+            👋 Hola, {user?.name || "Usuario"}
+          </span>
           <button
             onClick={() =>
-              logout({ logoutParams: { returnTo: window.location.origin } })
+              logout({
+                logoutParams: { returnTo: window.location.origin },
+              })
             }
+            style={{
+              padding: "0.5rem 1rem",
+              background: "#e63946",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
           >
             Cerrar sesión
           </button>
         </>
       ) : (
-        <button onClick={() => loginWithRedirect()}>Iniciar sesión</button>
+        <button
+          onClick={() => loginWithRedirect()}
+          style={{
+            padding: "0.5rem 1rem",
+            background: "#1d3557",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Iniciar sesión
+        </button>
       )}
     </nav>
   );

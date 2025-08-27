@@ -1,5 +1,5 @@
 // filepath: /home/c-sar-gonzalo-isique-castro/Projects/SistemaReservas_SanitasOris/frontend/src/services/reservas.js
-import api from "./api";
+import { api } from "./api";
 
 export const getReservas = async () => {
   try {
