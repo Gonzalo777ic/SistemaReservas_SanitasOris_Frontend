@@ -1,9 +1,13 @@
-// filepath: /home/c-sar-gonzalo-isique-castro/Projects/SistemaReservas_SanitasOris/frontend/src/services/reservas.js
+// filepath: frontend/src/services/reservas.js
 import { api } from "./api";
 
-export const getReservas = async () => {
+export const getReservas = async (token) => {
   try {
-    const response = await api.get("reservas/");
+    const response = await api.get("reservas/", {
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ ahora sí usas el token recibido
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error al obtener reservas:", error);
@@ -15,7 +19,7 @@ export async function crearReserva(reserva, token) {
   try {
     const response = await api.post("reservas/", reserva, {
       headers: {
-        Authorization: `Token ${token}`,
+        Authorization: `Bearer ${token}`, // ✅ corregido: antes tenías "Token"
       },
     });
     return response.data;
@@ -24,9 +28,13 @@ export async function crearReserva(reserva, token) {
   }
 }
 
-export async function actualizarReserva(id, reserva) {
+export async function actualizarReserva(id, reserva, token) {
   try {
-    const response = await api.put(`reservas/${id}/`, reserva);
+    const response = await api.put(`reservas/${id}/`, reserva, {
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ agregado para consistencia
+      },
+    });
     return response.data;
   } catch (error) {
     throw error;
