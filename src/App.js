@@ -1,4 +1,5 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 import DashboardPaciente from "./pages/DashboardPaciente";
 import ReservasPacientePage from "./pages/ReservasPacientePage";
@@ -6,6 +7,7 @@ import ReservasPage from "./pages/ReservasPage";
 function App() {
   return (
     <Router>
+      <Navbar />
       <Routes>
         <Route
           path="/"
