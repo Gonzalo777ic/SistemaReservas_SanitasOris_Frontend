@@ -1,13 +1,16 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
+import UserSync from "./components/UserSync";
 import DashboardPaciente from "./pages/DashboardPaciente";
 import ReservasPacientePage from "./pages/ReservasPacientePage";
 import ReservasPage from "./pages/ReservasPage";
+
 function App() {
   return (
     <Router>
       <Navbar />
+      <UserSync /> {/* <--- Aquí se monta el componente */}
       <Routes>
         <Route
           path="/"

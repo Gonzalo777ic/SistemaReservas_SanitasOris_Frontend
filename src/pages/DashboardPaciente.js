@@ -9,33 +9,6 @@ export default function DashboardPaciente() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 🔹 Registrar usuario en backend al iniciar sesión
-  useEffect(() => {
-    const registrarUsuario = async () => {
-      try {
-        const token = await getAccessTokenSilently();
-
-        await fetch("http://localhost:8000/api/sync-user/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            email: user?.email,
-            nombre: user?.name || "Paciente",
-          }),
-        });
-      } catch (error) {
-        console.error("Error registrando usuario:", error);
-      }
-    };
-
-    if (user) {
-      registrarUsuario();
-    }
-  }, [user, getAccessTokenSilently]);
-
   // 🔹 Obtener citas desde el backend
   useEffect(() => {
     const fetchCitas = async () => {
