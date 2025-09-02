@@ -17,6 +17,8 @@ export const getReservas = async (token) => {
 
 export async function crearReserva(reserva, token) {
   try {
+    console.log("Datos enviados al backend:", reserva); // 🔍 <-- aquí
+
     const response = await api.post("reservas/", reserva, {
       headers: {
         Authorization: `Bearer ${token}`, // ✅ corregido: antes tenías "Token"

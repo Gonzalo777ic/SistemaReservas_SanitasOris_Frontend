@@ -10,7 +10,7 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <UserSync /> {/* <--- Aquí se monta el componente */}
+      <UserSync />
       <Routes>
         <Route
           path="/"

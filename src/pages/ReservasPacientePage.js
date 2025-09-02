@@ -59,27 +59,28 @@ export default function ReservasPacientePage() {
     try {
       const token = await getAccessTokenSilently();
 
-      // Combinar fecha + hora en datetime ISO
       const fecha_hora = new Date(`${formData.fecha}T${formData.hora}`);
 
-      // 🔹 Obtener ID del paciente desde backend (por email de Auth0)
       const pacienteResponse = await api.get(
         `pacientes/by_email/${user.email}/`
       );
       const pacienteId = pacienteResponse.data.id;
 
-      const reserva = {
-        paciente: pacienteId,
-        doctor: formData.doctor, // id del doctor (o "1" si John Doe fijo)
+      // 🔹 Crear objeto con los nombres de campo correctos
+      const reservaParaEnviar = {
+        paciente_id: pacienteId,
+        doctor_id: parseInt(formData.doctor),
         fecha_hora: fecha_hora.toISOString(),
       };
 
-      await crearReserva(reserva, token);
+      console.log("Reserva a enviar:", reservaParaEnviar);
+
+      await crearReserva(reservaParaEnviar, token);
 
       setMensaje("✅ Cita reservada con éxito");
       setFormData({ fecha: "", hora: "", doctor: "" });
     } catch (error) {
-      console.error("Error al reservar cita:", error);
+      console.error("Error al reservar cita:", error.response?.data || error);
       setMensaje("❌ Ocurrió un error al reservar la cita");
     } finally {
       setLoading(false);

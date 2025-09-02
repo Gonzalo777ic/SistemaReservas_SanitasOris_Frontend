@@ -70,19 +70,6 @@ export default function DashboardPaciente() {
         }}
       >
         <h2>Bienvenido, {user?.name || "Paciente"}</h2>
-        <button
-          onClick={() => logout({ returnTo: window.location.origin })}
-          style={{
-            backgroundColor: "#e74c3c",
-            color: "white",
-            border: "none",
-            padding: "0.5rem 1rem",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Cerrar sesión
-        </button>
       </div>
 
       {/* Próximas citas */}
