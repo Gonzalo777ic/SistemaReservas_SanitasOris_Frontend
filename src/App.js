@@ -6,6 +6,7 @@ import UserSync from "./components/UserSync";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardDoctor from "./pages/DashboardDoctor";
 import DashboardPaciente from "./pages/DashboardPaciente";
+import HorarioDoctorPage from "./pages/HorarioDoctorPage";
 import ReservasPacientePage from "./pages/ReservasPacientePage";
 import ReservasPage from "./pages/ReservasPage";
 
@@ -57,6 +58,15 @@ function App() {
           element={
             <PrivateRoute allowedRoles={["doctor"]}>
               <DashboardDoctor />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/horario"
+          element={
+            <PrivateRoute allowedRoles={["doctor"]}>
+              <HorarioDoctorPage />
             </PrivateRoute>
           }
         />

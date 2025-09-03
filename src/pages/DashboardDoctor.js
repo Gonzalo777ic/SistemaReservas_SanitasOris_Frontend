@@ -7,17 +7,37 @@ export default function DashboardDoctor() {
     <div style={{ padding: "2rem", textAlign: "center" }}>
       <h1>Bienvenido Doctor</h1>
       <p>Seleccione una acción para comenzar:</p>
-      <button
-        onClick={() => navigate("/reservas")}
+
+      <div
         style={{
-          padding: "1rem 2rem",
-          fontSize: "1rem",
-          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
           marginTop: "1rem",
         }}
       >
-        Ver y gestionar reservas
-      </button>
+        <button
+          onClick={() => navigate("/reservas")}
+          style={{
+            padding: "1rem 2rem",
+            fontSize: "1rem",
+            cursor: "pointer",
+          }}
+        >
+          Ver y gestionar reservas
+        </button>
+
+        <button
+          onClick={() => navigate("/horario")}
+          style={{
+            padding: "1rem 2rem",
+            fontSize: "1rem",
+            cursor: "pointer",
+          }}
+        >
+          Configurar mi horario
+        </button>
+      </div>
     </div>
   );
 }
