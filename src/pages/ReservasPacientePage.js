@@ -1,11 +1,14 @@
 // src/pages/ReservasPacientePage.js
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
+import DoctoresList from "../components/reservas/DoctoresList";
+import ProcedimientosCarousel from "../components/reservas/ProcedimientosCarousel";
 import { api } from "../services/api";
 import { crearReserva } from "../services/reservas";
 
 export default function ReservasPacientePage() {
   const { user, getAccessTokenSilently } = useAuth0();
+  const [procedimiento, setProcedimiento] = useState(null);
 
   const [formData, setFormData] = useState({
     fecha: "",
@@ -17,27 +20,21 @@ export default function ReservasPacientePage() {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
-  // 🔹 Cargar lista de doctores (si no hay, agregar John Doe por defecto)
-  // 🔹 Cargar lista de doctores (si no hay, agregar John Doe por defecto)
+  // 🔹 Cargar lista de doctores desde el backend
   useEffect(() => {
     const fetchDoctores = async () => {
       try {
-        const token = await getAccessTokenSilently(); // 👈 pedir token a Auth0
+        const token = await getAccessTokenSilently();
 
         const res = await api.get("doctores/", {
           headers: {
-            Authorization: `Bearer ${token}`, // 👈 incluir token en la cabecera
+            Authorization: `Bearer ${token}`,
           },
         });
 
-        if (res.data.length > 0) {
-          setDoctores(res.data);
-        } else {
-          setDoctores([{ id: 1, nombre: "John Doe" }]); // fallback
-        }
+        setDoctores(res.data);
       } catch (err) {
         console.error("Error al obtener doctores:", err);
-        setDoctores([{ id: 1, nombre: "John Doe" }]); // fallback si API falla
       }
     };
 
@@ -62,11 +59,15 @@ export default function ReservasPacientePage() {
       const fecha_hora = new Date(`${formData.fecha}T${formData.hora}`);
 
       const pacienteResponse = await api.get(
-        `pacientes/by_email/${user.email}/`
+        `pacientes/by_email/${user.email}/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const pacienteId = pacienteResponse.data.id;
 
-      // 🔹 Crear objeto con los nombres de campo correctos
       const reservaParaEnviar = {
         paciente_id: pacienteId,
         doctor_id: parseInt(formData.doctor),
@@ -89,6 +90,21 @@ export default function ReservasPacientePage() {
 
   return (
     <div style={{ padding: "2rem", maxWidth: "500px", margin: "0 auto" }}>
+      <div>
+        <h2>Reservar nueva cita</h2>
+        <ProcedimientosCarousel onSelect={setProcedimiento} />
+        {procedimiento && (
+          <p>
+            Seleccionaste: <strong>{procedimiento.nombre}</strong> (
+            {procedimiento.duracion} min)
+          </p>
+        )}
+        {/* 🔹 Mostrar doctores */}
+        <DoctoresList
+          doctores={doctores}
+          onSelect={(doc) => setFormData({ ...formData, doctor: doc.id })}
+        />{" "}
+      </div>
       <h2>Reservar nueva cita</h2>
       <p>Paciente: {user?.name || "Paciente"}</p>
 
@@ -132,7 +148,7 @@ export default function ReservasPacientePage() {
             <option value="">-- Selecciona un doctor --</option>
             {doctores.map((doc) => (
               <option key={doc.id} value={doc.id}>
-                {doc.nombre}
+                {doc.nombre} {doc.apellido} ({doc.especialidad})
               </option>
             ))}
           </select>
