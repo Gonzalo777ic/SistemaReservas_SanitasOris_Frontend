@@ -1,88 +1,106 @@
 // src/pages/ReservasPacientePage.js
+
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
 import DoctoresList from "../components/reservas/DoctoresList";
 import ProcedimientosCarousel from "../components/reservas/ProcedimientosCarousel";
 import { api } from "../services/api";
-import { crearReserva } from "../services/reservas";
 
 export default function ReservasPacientePage() {
   const { user, getAccessTokenSilently } = useAuth0();
   const [procedimiento, setProcedimiento] = useState(null);
-
-  const [formData, setFormData] = useState({
-    fecha: "",
-    hora: "",
-    doctor: "",
-  });
-
   const [doctores, setDoctores] = useState([]);
+  const [doctorSeleccionado, setDoctorSeleccionado] = useState(null);
+  const [disponibilidad, setDisponibilidad] = useState([]);
+  const [fechaHoraSeleccionada, setFechaHoraSeleccionada] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
-  // 🔹 Cargar lista de doctores desde el backend
   useEffect(() => {
+    // 🔹 Cargar lista de procedimientos básicos
+    const fetchProcedimientos = async () => {
+      try {
+        const res = await api.get("procedimientos/");
+        // Asume que el carrusel se encarga de mostrar estos datos
+        console.log(res.data);
+      } catch (err) {
+        console.error("Error al obtener procedimientos:", err);
+      }
+    };
+    fetchProcedimientos();
+
+    // 🔹 Cargar lista de doctores
     const fetchDoctores = async () => {
       try {
-        const token = await getAccessTokenSilently();
-
-        const res = await api.get("doctores/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const res = await api.get("doctores/");
         setDoctores(res.data);
       } catch (err) {
         console.error("Error al obtener doctores:", err);
       }
     };
-
     fetchDoctores();
-  }, [getAccessTokenSilently]);
+  }, []);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  useEffect(() => {
+    // 🔹 Cargar disponibilidad al seleccionar doctor y procedimiento
+    const fetchDisponibilidad = async () => {
+      if (doctorSeleccionado && procedimiento) {
+        setLoading(true);
+        try {
+          const token = await getAccessTokenSilently();
+          const res = await api.get(`reservas/disponibilidad/`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: {
+              doctor_id: doctorSeleccionado.id,
+              procedimiento_id: procedimiento.id,
+            },
+          });
+          setDisponibilidad(res.data.slots_disponibles);
+        } catch (err) {
+          console.error("Error al obtener disponibilidad:", err);
+          setMensaje("❌ No hay horarios disponibles para este doctor.");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchDisponibilidad();
+  }, [doctorSeleccionado, procedimiento, getAccessTokenSilently]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleReserva = async () => {
+    // 🔹 Lógica para crear la reserva
     setLoading(true);
-    setMensaje("");
-
     try {
       const token = await getAccessTokenSilently();
-
-      const fecha_hora = new Date(`${formData.fecha}T${formData.hora}`);
-
       const pacienteResponse = await api.get(
         `pacientes/by_email/${user.email}/`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       const pacienteId = pacienteResponse.data.id;
 
       const reservaParaEnviar = {
         paciente_id: pacienteId,
-        doctor_id: parseInt(formData.doctor),
-        fecha_hora: fecha_hora.toISOString(),
+        doctor_id: doctorSeleccionado.id,
+        procedimiento_id: procedimiento.id,
+        fecha_hora: fechaHoraSeleccionada,
+        duracion_min: procedimiento.duracion_min,
       };
 
-      console.log("Reserva a enviar:", reservaParaEnviar);
-
-      await crearReserva(reservaParaEnviar, token);
+      await api.post("reservas/", reservaParaEnviar, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setMensaje("✅ Cita reservada con éxito");
-      setFormData({ fecha: "", hora: "", doctor: "" });
+      // Reiniciar estado para una nueva reserva
+      setProcedimiento(null);
+      setDoctorSeleccionado(null);
+      setFechaHoraSeleccionada(null);
+      setDisponibilidad([]);
     } catch (error) {
       console.error("Error al reservar cita:", error.response?.data || error);
-      setMensaje("❌ Ocurrió un error al reservar la cita");
+      setMensaje("❌ Ocurrió un error al reservar la cita.");
     } finally {
       setLoading(false);
     }
@@ -90,74 +108,72 @@ export default function ReservasPacientePage() {
 
   return (
     <div style={{ padding: "2rem", maxWidth: "500px", margin: "0 auto" }}>
-      <div>
-        <h2>Reservar nueva cita</h2>
-        <ProcedimientosCarousel onSelect={setProcedimiento} />
-        {procedimiento && (
-          <p>
-            Seleccionaste: <strong>{procedimiento.nombre}</strong> (
-            {procedimiento.duracion} min)
-          </p>
-        )}
-        {/* 🔹 Mostrar doctores */}
-        <DoctoresList
-          doctores={doctores}
-          onSelect={(doc) => setFormData({ ...formData, doctor: doc.id })}
-        />{" "}
-      </div>
       <h2>Reservar nueva cita</h2>
       <p>Paciente: {user?.name || "Paciente"}</p>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-      >
-        <div>
-          <label>Fecha:</label>
-          <input
-            type="date"
-            name="fecha"
-            value={formData.fecha}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "0.5rem" }}
-          />
-        </div>
+      {/* 1. Selección de Procedimiento */}
+      <h3>1. Elige un procedimiento</h3>
+      <ProcedimientosCarousel onSelect={setProcedimiento} />
+      {procedimiento && (
+        <p>
+          Seleccionaste: <strong>{procedimiento.nombre}</strong> (
+          {procedimiento.duracion_min} min)
+        </p>
+      )}
 
+      {/* 2. Selección de Doctor */}
+      {procedimiento && (
         <div>
-          <label>Hora:</label>
-          <input
-            type="time"
-            name="hora"
-            value={formData.hora}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "0.5rem" }}
-          />
+          <h3>2. Elige un doctor</h3>
+          <DoctoresList doctores={doctores} onSelect={setDoctorSeleccionado} />
         </div>
+      )}
 
+      {/* 3. Selección de Fecha y Hora */}
+      {procedimiento && doctorSeleccionado && (
         <div>
-          <label>Doctor:</label>
-          <select
-            name="doctor"
-            value={formData.doctor}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "0.5rem" }}
-          >
-            <option value="">-- Selecciona un doctor --</option>
-            {doctores.map((doc) => (
-              <option key={doc.id} value={doc.id}>
-                {doc.nombre} {doc.apellido} ({doc.especialidad})
-              </option>
-            ))}
-          </select>
+          <h3>3. Elige fecha y hora</h3>
+          {loading ? (
+            <p>Cargando horarios disponibles...</p>
+          ) : (
+            <div>
+              {disponibilidad.length > 0 ? (
+                <div
+                  style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}
+                >
+                  {disponibilidad.map((slot) => (
+                    <button
+                      key={slot}
+                      onClick={() => setFechaHoraSeleccionada(slot)}
+                      style={{
+                        padding: "0.5rem 1rem",
+                        border: "1px solid #ddd",
+                        backgroundColor:
+                          fechaHoraSeleccionada === slot ? "#27ae60" : "white",
+                        color:
+                          fechaHoraSeleccionada === slot ? "white" : "black",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {new Date(slot).toLocaleString()}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p>No hay horarios disponibles.</p>
+              )}
+            </div>
+          )}
         </div>
+      )}
 
+      {/* 4. Confirmación de la cita */}
+      {fechaHoraSeleccionada && (
         <button
-          type="submit"
+          onClick={handleReserva}
           disabled={loading}
           style={{
+            marginTop: "1rem",
             backgroundColor: "#27ae60",
             color: "white",
             border: "none",
@@ -166,9 +182,9 @@ export default function ReservasPacientePage() {
             cursor: "pointer",
           }}
         >
-          {loading ? "Reservando..." : "Reservar cita"}
+          {loading ? "Reservando..." : "Confirmar Cita"}
         </button>
-      </form>
+      )}
 
       {mensaje && <p style={{ marginTop: "1rem" }}>{mensaje}</p>}
     </div>

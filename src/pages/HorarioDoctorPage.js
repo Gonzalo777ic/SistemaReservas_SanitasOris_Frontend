@@ -6,11 +6,6 @@ export default function HorarioDoctorPage() {
   const { user, getAccessTokenSilently } = useAuth0();
   const [doctorId, setDoctorId] = useState(null);
   const [horarios, setHorarios] = useState([]);
-  const [nuevoHorario, setNuevoHorario] = useState({
-    dia_semana: 0,
-    hora_inicio: "",
-    hora_fin: "",
-  });
 
   const diasSemana = [
     "Lunes",
@@ -22,7 +17,7 @@ export default function HorarioDoctorPage() {
     "Domingo",
   ];
 
-  // 🔹 1. Obtener ID del doctor según el usuario logueado
+  // Obtener doctor del usuario
   useEffect(() => {
     const fetchDoctorId = async () => {
       try {
@@ -30,25 +25,18 @@ export default function HorarioDoctorPage() {
         const res = await api.get("doctores/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const doctor = res.data.find(
           (d) => d.user?.email === user.email || d.email === user.email
         );
-
-        if (doctor) {
-          setDoctorId(doctor.id);
-        } else {
-          console.error("❌ No se encontró doctor asociado a este usuario");
-        }
+        if (doctor) setDoctorId(doctor.id);
       } catch (err) {
         console.error("Error al obtener doctor:", err);
       }
     };
-
     fetchDoctorId();
   }, [getAccessTokenSilently, user.email]);
 
-  // 🔹 2. Cargar horarios del doctor
+  // Cargar horarios
   useEffect(() => {
     const fetchHorarios = async () => {
       if (!doctorId) return;
@@ -62,32 +50,31 @@ export default function HorarioDoctorPage() {
         console.error("Error al obtener horarios:", err);
       }
     };
-
     fetchHorarios();
   }, [doctorId, getAccessTokenSilently]);
 
-  // 🔹 3. Guardar nuevo horario
-  const handleAgregar = async (e) => {
-    e.preventDefault();
+  // Agregar rango
+  const handleAgregar = async (dia, inicio, fin) => {
     if (!doctorId) return;
-
     try {
       const token = await getAccessTokenSilently();
       const res = await api.post(
         "horarios/",
-        { ...nuevoHorario, doctor_id: doctorId },
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          dia_semana: dia,
+          hora_inicio: inicio,
+          hora_fin: fin,
+          doctor_id: doctorId,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setHorarios([...horarios, res.data]);
-      setNuevoHorario({ dia_semana: 0, hora_inicio: "", hora_fin: "" });
     } catch (err) {
       console.error("Error al agregar horario:", err.response?.data || err);
     }
   };
 
-  // 🔹 4. Eliminar horario
+  // Eliminar
   const handleEliminar = async (id) => {
     try {
       const token = await getAccessTokenSilently();
@@ -104,64 +91,61 @@ export default function HorarioDoctorPage() {
     <div style={{ padding: "2rem" }}>
       <h2>Mi Horario de Disponibilidad</h2>
 
-      {!doctorId && <p>🔄 Buscando doctor asociado a tu cuenta...</p>}
+      {!doctorId && <p>🔄 Cargando doctor...</p>}
 
       {doctorId && (
-        <>
-          <form onSubmit={handleAgregar} style={{ marginBottom: "1rem" }}>
-            <select
-              value={nuevoHorario.dia_semana}
-              onChange={(e) =>
-                setNuevoHorario({
-                  ...nuevoHorario,
-                  dia_semana: parseInt(e.target.value),
-                })
-              }
-              required
-            >
-              {diasSemana.map((d, i) => (
-                <option key={i} value={i}>
-                  {d}
-                </option>
-              ))}
-            </select>
-            <input
-              type="time"
-              value={nuevoHorario.hora_inicio}
-              onChange={(e) =>
-                setNuevoHorario({
-                  ...nuevoHorario,
-                  hora_inicio: e.target.value,
-                })
-              }
-              required
-            />
-            <input
-              type="time"
-              value={nuevoHorario.hora_fin}
-              onChange={(e) =>
-                setNuevoHorario({ ...nuevoHorario, hora_fin: e.target.value })
-              }
-              required
-            />
-            <button type="submit">Agregar</button>
-          </form>
-
-          <ul>
-            {horarios.map((h) => (
-              <li key={h.id}>
-                {diasSemana[h.dia_semana]}: {h.hora_inicio} - {h.hora_fin}
-                <button
-                  onClick={() => handleEliminar(h.id)}
-                  style={{ marginLeft: "1rem", color: "red" }}
-                >
-                  Eliminar
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
+        <div className="horario-grid">
+          {diasSemana.map((dia, i) => (
+            <div key={i} style={{ marginBottom: "1.5rem" }}>
+              <h3>{dia}</h3>
+              <ul>
+                {horarios
+                  .filter((h) => h.dia_semana === i)
+                  .map((h) => (
+                    <li key={h.id}>
+                      {h.hora_inicio} – {h.hora_fin}
+                      <button
+                        onClick={() => handleEliminar(h.id)}
+                        style={{ marginLeft: "1rem", color: "red" }}
+                      >
+                        ❌
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+              <AgregarRango onAdd={(ini, fin) => handleAgregar(i, ini, fin)} />
+            </div>
+          ))}
+        </div>
       )}
+    </div>
+  );
+}
+
+// 🔹 Componente pequeño para añadir rangos
+function AgregarRango({ onAdd }) {
+  const [inicio, setInicio] = useState("");
+  const [fin, setFin] = useState("");
+
+  return (
+    <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+      <input
+        type="time"
+        value={inicio}
+        onChange={(e) => setInicio(e.target.value)}
+      />
+      <input type="time" value={fin} onChange={(e) => setFin(e.target.value)} />
+      <button
+        onClick={() => {
+          if (inicio && fin) {
+            onAdd(inicio, fin);
+            setInicio("");
+            setFin("");
+          }
+        }}
+      >
+        ➕
+      </button>
     </div>
   );
 }
