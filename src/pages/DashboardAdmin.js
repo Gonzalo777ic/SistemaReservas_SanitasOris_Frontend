@@ -7,6 +7,7 @@ import startOfWeek from "date-fns/startOfWeek";
 import { useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import StatsCards from "../components/dashboard/StatsCards";
 
 // Configuración de locales para date-fns
 import { es } from "date-fns/locale";
@@ -122,8 +123,8 @@ export default function DashboardAdmin() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-6">
+      <main className="flex-1 p-6 w-full">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800">
             Panel del Administrador
           </h1>
@@ -133,40 +134,17 @@ export default function DashboardAdmin() {
           <p>Cargando datos del dashboard...</p>
         ) : (
           <>
-            {/* Stats cards */}
-            <div className="grid grid-cols-3 gap-6 mb-6">
-              <div className="bg-white p-4 rounded-xl shadow">
-                <h2 className="text-gray-600">Citas pendientes</h2>
-                <p className="text-3xl font-bold">{stats.citas_pendientes}</p>
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow">
-                <h2 className="text-gray-600 flex justify-between items-center">
-                  Citas esta semana
-                  <div className="space-x-2">
-                    <button
-                      onClick={() => setWeekOffset((w) => w - 1)}
-                      className="px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      ◀
-                    </button>
-                    <button
-                      onClick={() => setWeekOffset((w) => w + 1)}
-                      className="px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      ▶
-                    </button>
-                  </div>
-                </h2>
-                <p className="text-3xl font-bold">{stats.citas_semana}</p>
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow">
-                <h2 className="text-gray-600">Total pacientes</h2>
-                <p className="text-3xl font-bold">{stats.total_pacientes}</p>
-              </div>
+            {/* Cards en fila */}
+            <div className="w-full mx-auto">
+              <StatsCards
+                stats={stats}
+                weekOffset={weekOffset}
+                setWeekOffset={setWeekOffset}
+              />
             </div>
 
             {/* Calendar Section */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mt-6">
               <Calendar
                 localizer={localizer}
                 events={appointments}
