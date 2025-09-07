@@ -86,3 +86,4 @@ export default function StatsCards({ stats, weekOffset, setWeekOffset }) {
     </div>
   );
 }
+a;
