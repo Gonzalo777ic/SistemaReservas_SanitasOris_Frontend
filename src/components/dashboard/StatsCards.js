@@ -1,88 +1,93 @@
-// src/components/dashboard/StatsCards.js
-import {
-  CalendarDaysIcon,
-  ClockIcon,
-  UserGroupIcon,
-} from "@heroicons/react/24/outline";
-// StatsCards.js
+import { ClockIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+import { Card } from "react-bootstrap";
+
 export default function StatsCards({ stats, weekOffset, setWeekOffset }) {
   return (
-    <div className="flex flex-col md:flex-row gap-6 mb-6">
+    <>
       {/* Card 1 */}
-      <div
-        className="flex-1 relative p-4 h-28 rounded-xl shadow-lg text-white transform transition-transform duration-300 hover:scale-105"
-        style={{
-          background: "linear-gradient(135deg, #4F46E5 0%, #2563EB 100%)",
-        }}
-      >
-        <div className="absolute top-2 right-2 flex items-center justify-center w-8 h-8 text-white/50">
-          <ClockIcon
-            className="w-6 h-6"
-            style={{ width: "1.5rem", height: "1.5rem" }}
-            aria-hidden="true"
-          />
-        </div>
-        <h2 className="text-xs uppercase tracking-wide opacity-80">
-          Citas pendientes
-        </h2>
-        <p className="text-3xl font-bold mt-1">{stats.citas_pendientes}</p>
+      <div className="col-md-4">
+        <Card className="shadow-sm border-0 h-100 rounded-3">
+          <Card.Body
+            className="text-white rounded-3"
+            style={{
+              background: "linear-gradient(135deg, #4F46E5 0%, #2563EB 100%)",
+            }}
+          >
+            <div className="position-absolute top-0 end-0 p-2 text-white-50">
+              <ClockIcon className="icon-sm" aria-hidden="true" />
+            </div>
+            <p className="text-uppercase small opacity-80 mb-0">
+              Citas pendientes
+            </p>
+            <h2 className="fw-bold display-6">{stats.citas_pendientes}</h2>
+          </Card.Body>
+        </Card>
       </div>
 
       {/* Card 2 */}
-      <div
-        className="flex-1 relative p-4 h-28 rounded-xl shadow-lg text-white transform transition-transform duration-300 hover:scale-105"
-        style={{
-          background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-        }}
-      >
-        <div className="absolute top-2 right-2 flex items-center justify-center w-8 h-8 text-white/50">
-          <CalendarDaysIcon
-            className="w-6 h-6"
-            style={{ width: "1.5rem", height: "1.5rem" }}
-            aria-hidden="true"
-          />
-        </div>
-        <div className="flex justify-between items-start mb-1">
-          <h2 className="text-xs uppercase tracking-wide opacity-80">
-            Citas esta semana
-          </h2>
-          <div className="space-x-1">
-            <button
-              onClick={() => setWeekOffset((w) => w - 1)}
-              className="px-1 py-0.5 text-xs bg-white/20 text-white rounded-md hover:bg-white/30 transition-colors"
-            >
-              ◀
-            </button>
-            <button
-              onClick={() => setWeekOffset((w) => w + 1)}
-              className="px-1 py-0.5 text-xs bg-white/20 text-white rounded-md hover:bg-white/30 transition-colors"
-            >
-              ▶
-            </button>
-          </div>
-        </div>
-        <p className="text-3xl font-bold">{stats.citas_semana}</p>
+      <div className="col-md-4">
+        <Card className="shadow-sm border-0 h-100 rounded-3">
+          <Card.Body
+            className="text-white rounded-3"
+            style={{
+              background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+            }}
+          >
+            <div className="d-flex justify-content-between align-items-start mb-2">
+              <div className="flex-grow-1">
+                <p className="text-uppercase small opacity-80 mb-0">
+                  Citas esta semana
+                </p>
+                <h2 className="fw-bold display-6">{stats.citas_semana}</h2>
+              </div>
+              <div className="d-flex align-items-center">
+                <button
+                  onClick={() => setWeekOffset((w) => w - 1)}
+                  className="btn btn-sm btn-light bg-white bg-opacity-25 text-white-50 me-1 rounded-3"
+                  style={{
+                    "--bs-btn-padding-y": ".25rem",
+                    "--bs-btn-padding-x": ".5rem",
+                    "--bs-btn-font-size": ".75rem",
+                  }}
+                >
+                  ◀
+                </button>
+                <button
+                  onClick={() => setWeekOffset((w) => w + 1)}
+                  className="btn btn-sm btn-light bg-white bg-opacity-25 text-white-50 rounded-3"
+                  style={{
+                    "--bs-btn-padding-y": ".25rem",
+                    "--bs-btn-padding-x": ".5rem",
+                    "--bs-btn-font-size": ".75rem",
+                  }}
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
+          </Card.Body>
+        </Card>
       </div>
 
       {/* Card 3 */}
-      <div
-        className="flex-1 relative p-4 h-28 rounded-xl shadow-lg text-white transform transition-transform duration-300 hover:scale-105"
-        style={{
-          background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
-        }}
-      >
-        <div className="absolute top-2 right-2 flex items-center justify-center w-8 h-8 text-white/50">
-          <UserGroupIcon
-            className="w-6 h-6"
-            style={{ width: "1.5rem", height: "1.5rem" }}
-            aria-hidden="true"
-          />
-        </div>
-        <h2 className="text-xs uppercase tracking-wide opacity-80">
-          Total pacientes
-        </h2>
-        <p className="text-3xl font-bold mt-1">{stats.total_pacientes}</p>
+      <div className="col-md-4">
+        <Card className="shadow-sm border-0 h-100 rounded-3">
+          <Card.Body
+            className="text-white rounded-3"
+            style={{
+              background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+            }}
+          >
+            <div className="position-absolute top-0 end-0 p-2 text-white-50">
+              <UserGroupIcon className="icon-sm" aria-hidden="true" />
+            </div>
+            <p className="text-uppercase small opacity-80 mb-0">
+              Total pacientes
+            </p>
+            <h2 className="fw-bold display-6">{stats.total_pacientes}</h2>
+          </Card.Body>
+        </Card>
       </div>
-    </div>
+    </>
   );
 }

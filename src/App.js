@@ -1,12 +1,13 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
-import RedirectByRole from "./components/RedirectByRole"; // 👈 importado
+import RedirectByRole from "./components/RedirectByRole";
 import UserSync from "./components/UserSync";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardDoctor from "./pages/DashboardDoctor";
 import DashboardPaciente from "./pages/DashboardPaciente";
 import HorarioDoctorPage from "./pages/HorarioDoctorPage";
+import PatientsAdmin from "./pages/PatientsAdmin"; // 👈 Importamos la nueva página
 import ReservasPacientePage from "./pages/ReservasPacientePage";
 import ReservasPage from "./pages/ReservasPage";
 
@@ -77,6 +78,15 @@ function App() {
           element={
             <PrivateRoute allowedRoles={["admin"]}>
               <DashboardAdmin />
+            </PrivateRoute>
+          }
+        />
+        {/* 📋 Nueva ruta para la gestión de pacientes (solo para admin) */}
+        <Route
+          path="/pacientes"
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <PatientsAdmin />
             </PrivateRoute>
           }
         />

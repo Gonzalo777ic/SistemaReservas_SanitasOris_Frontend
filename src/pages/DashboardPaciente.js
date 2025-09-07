@@ -83,7 +83,8 @@ export default function DashboardPaciente() {
                   {cita.doctor?.user?.name || cita.doctor?.user?.email || "N/A"}
                 </p>
                 <p>
-                  <strong>Procedimiento:</strong> {cita.procedimiento || "N/A"}
+                  <strong>Procedimiento:</strong>{" "}
+                  {cita.procedimiento?.nombre || "N/A"}
                 </p>
                 <button
                   onClick={() => handleCancelar(cita.id)}
