@@ -8,8 +8,10 @@ import DashboardDoctor from "./pages/DashboardDoctor";
 import DashboardPaciente from "./pages/DashboardPaciente";
 import HorarioDoctorPage from "./pages/HorarioDoctorPage";
 import PatientsAdmin from "./pages/PatientsAdmin"; // 👈 Importamos la nueva página
+import ReservasAdmin from "./pages/ReservasAdmin";
 import ReservasPacientePage from "./pages/ReservasPacientePage";
 import ReservasPage from "./pages/ReservasPage";
+import UsersAdmin from "./pages/UsersAdmin";
 
 function App() {
   return (
@@ -87,6 +89,24 @@ function App() {
           element={
             <PrivateRoute allowedRoles={["admin"]}>
               <PatientsAdmin />
+            </PrivateRoute>
+          }
+        />
+        {/* 📋 Nueva ruta para la gestión de pacientes (solo para admin) */}
+        <Route
+          path="/reservas-admin"
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <ReservasAdmin />
+            </PrivateRoute>
+          }
+        />
+        {/* 📋 Nueva ruta para la gestión de pacientes (solo para admin) */}
+        <Route
+          path="/users"
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <UsersAdmin />
             </PrivateRoute>
           }
         />

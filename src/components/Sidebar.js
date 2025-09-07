@@ -1,4 +1,5 @@
 import {
+  MdApps,
   MdDashboard,
   MdDateRange,
   MdHealing,
@@ -11,8 +12,8 @@ import {
 const adminLinks = [
   { name: "Dashboard", href: "/dashboard-admin", icon: MdDashboard },
   { name: "Pacientes", href: "/pacientes", icon: MdPeople },
-  { name: "Reservas", href: "/reservas", icon: MdDateRange },
-  { name: "Mensajes", href: "/mensajes", icon: MdMessage },
+  { name: "Reservas", href: "/reservas-admin", icon: MdDateRange },
+  { name: "Users", href: "/users", icon: MdApps },
   { name: "Ajustes", href: "/ajustes", icon: MdSettings },
 ];
 
