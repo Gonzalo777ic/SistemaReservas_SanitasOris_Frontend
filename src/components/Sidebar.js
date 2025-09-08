@@ -6,15 +6,14 @@ import {
   MdMessage,
   MdPeople,
   MdPerson,
-  MdSettings,
 } from "react-icons/md";
+import logo from "../assets/sanitas_oris_logo.png";
 
 const adminLinks = [
   { name: "Dashboard", href: "/dashboard-admin", icon: MdDashboard },
   { name: "Pacientes", href: "/pacientes", icon: MdPeople },
   { name: "Reservas", href: "/reservas-admin", icon: MdDateRange },
   { name: "Users", href: "/users", icon: MdApps },
-  { name: "Ajustes", href: "/ajustes", icon: MdSettings },
 ];
 
 const doctorLinks = [
@@ -45,7 +44,12 @@ const Sidebar = ({ userRole = "patient" }) => {
       style={{ width: "200px" }}
     >
       <div className="p-3 border-bottom border-secondary-subtle">
-        <img src="/logo.svg" alt="Logo" className="h-8" />
+        <img
+          src={logo}
+          alt="Sanitas Oris Logo"
+          className="img-fluid"
+          style={{ maxHeight: "15rem" }}
+        />
       </div>
       <nav className="flex-grow-1 p-2">
         <ul className="nav flex-column">
