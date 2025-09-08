@@ -66,7 +66,7 @@ function App() {
         />
 
         <Route
-          path="/horario"
+          path="/horario-doctor"
           element={
             <PrivateRoute allowedRoles={["doctor"]}>
               <HorarioDoctorPage />

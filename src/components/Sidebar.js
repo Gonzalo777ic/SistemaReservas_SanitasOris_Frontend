@@ -19,6 +19,7 @@ const adminLinks = [
 
 const doctorLinks = [
   { name: "Dashboard", href: "/dashboard-doctor", icon: MdDashboard },
+  { name: "Horario", href: "/horario-doctor", icon: MdDashboard },
   { name: "Pacientes", href: "/pacientes", icon: MdPeople },
   { name: "Citas", href: "/citas", icon: MdDateRange },
   { name: "Mensajes", href: "/mensajes", icon: MdMessage },
