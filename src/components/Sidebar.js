@@ -7,6 +7,7 @@ import {
   MdPeople,
   MdPerson,
 } from "react-icons/md";
+import { NavLink } from "react-router-dom";
 import logo from "../assets/sanitas_oris_logo.png";
 
 const adminLinks = [
@@ -55,20 +56,22 @@ const Sidebar = ({ userRole = "patient" }) => {
         <ul className="nav flex-column">
           {links.map((link) => (
             <li className="nav-item" key={link.name}>
-              <a
-                href={link.href}
-                className={`nav-link rounded ${
-                  window.location.pathname === link.href
-                    ? "active fw-bold text-primary bg-primary bg-opacity-10"
-                    : "text-secondary-emphasis"
-                }`}
+              <NavLink
+                to={link.href} // ✨ Aquí cambiamos 'href' por 'to'
+                className={({ isActive }) =>
+                  `nav-link rounded ${
+                    isActive
+                      ? "active fw-bold text-primary bg-primary bg-opacity-10"
+                      : "text-secondary-emphasis"
+                  }`
+                }
               >
                 <link.icon
                   className="me-2"
                   style={{ verticalAlign: "middle" }}
                 />
                 {link.name}
-              </a>
+              </NavLink>
             </li>
           ))}
         </ul>
