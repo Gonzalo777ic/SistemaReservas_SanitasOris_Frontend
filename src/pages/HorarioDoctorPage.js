@@ -52,6 +52,8 @@ export default function HorarioDoctorPage() {
   const [templateName, setTemplateName] = useState("");
   const [savedSchedules, setSavedSchedules] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [horarioToDelete, setHorarioToDelete] = useState(null);
 
   const fetchDoctorId = useCallback(async () => {
     try {
@@ -152,6 +154,31 @@ export default function HorarioDoctorPage() {
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!horarioToDelete) return;
+
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
+      });
+
+      await api.put(
+        `horarios/${horarioToDelete.id}/`,
+        { ...horarioToDelete, doctor_id: doctorId, activo: false },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setHorarios(horarios.filter((h) => h.id !== horarioToDelete.id));
+
+      console.log("Horario eliminado del front (soft delete en DB)");
+    } catch (err) {
+      console.error("Error al desactivar horario:", err.response?.data || err);
+    } finally {
+      setShowDeleteModal(false);
+      setHorarioToDelete(null);
+    }
+  };
+
   const handleSaveTemplate = async () => {
     // LLAMADA REAL PARA GUARDAR LA PLANTILLA
     if (!templateName || !doctorId || horarios.length === 0) {
@@ -160,6 +187,15 @@ export default function HorarioDoctorPage() {
       );
       return;
     }
+
+    // ⭐ CORRECCIÓN: Filtra los horarios para incluir solo los activos.
+    const horariosActivos = horarios.filter((h) => h.activo);
+
+    if (horariosActivos.length === 0) {
+      console.error("No hay horarios activos para guardar.");
+      return;
+    }
+
     try {
       const token = await getAccessTokenSilently({
         authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
@@ -170,7 +206,8 @@ export default function HorarioDoctorPage() {
         {
           nombre: templateName,
           doctor: doctorId,
-          items: horarios,
+          // ⭐ CORRECCIÓN: Ahora se envía solo los horarios filtrados.
+          items: horariosActivos,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -241,37 +278,42 @@ export default function HorarioDoctorPage() {
     setShowModal(true);
   };
 
-  const handleEliminar = async (id) => {
+  const handleEliminar = async (horario) => {
     try {
       const token = await getAccessTokenSilently({
         authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
       });
-      await api.delete(`horarios/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setHorarios(horarios.filter((h) => h.id !== id));
+
+      // 1. Envía la solicitud PUT para el soft delete
+      await api.put(
+        `horarios/${horario.id}/`,
+        { ...horario, doctor_id: doctorId, activo: false },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // 2. CORRECCIÓN: Elimina el horario del estado local para que no se muestre en el front
+      setHorarios(horarios.filter((h) => h.id !== horario.id));
+
+      console.log("Horario eliminado del front (soft delete en DB)");
     } catch (err) {
-      console.error("Error al eliminar horario:", err);
+      console.error("Error al desactivar horario:", err.response?.data || err);
     }
   };
 
+  // Función para mostrar el horario
   const handleToggleActive = async (horario) => {
     try {
       const token = await getAccessTokenSilently({
         authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
       });
+
+      // CORRECCIÓN: Se envía el objeto completo, asegurando que el doctor_id esté presente.
       const res = await api.put(
         `horarios/${horario.id}/`,
-        // Evitamos el operador de propagación para un control estricto de los campos
-        {
-          doctor_id: horario.doctor_id,
-          dia_semana: horario.dia_semana,
-          hora_inicio: horario.hora_inicio,
-          hora_fin: horario.hora_fin,
-          activo: !horario.activo,
-        },
+        { ...horario, doctor_id: doctorId, activo: !horario.activo },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setHorarios(horarios.map((h) => (h.id === horario.id ? res.data : h)));
     } catch (err) {
       console.error(
@@ -394,6 +436,31 @@ export default function HorarioDoctorPage() {
           </Button>
         </div>
 
+        {/* Modal de confirmación para eliminar */}
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirmar eliminación</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>¿Estás seguro de que deseas eliminar este bloque de horario?</p>
+            <p>
+              Este horario ya no será visible en el calendario ni en la tabla,
+              pero sus datos se conservarán en la base de datos.
+            </p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleConfirmDelete}>
+              Sí, eliminar
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
         {/* Tarjeta para la tabla de horarios */}
         <Card className="shadow-sm">
           <Card.Body>
@@ -447,7 +514,11 @@ export default function HorarioDoctorPage() {
                       <Button
                         variant="outline-danger"
                         size="sm"
-                        onClick={() => handleEliminar(horario.id)}
+                        // Cambia la acción para mostrar el modal de confirmación
+                        onClick={() => {
+                          setHorarioToDelete(horario);
+                          setShowDeleteModal(true);
+                        }}
                       >
                         <MdDelete />
                       </Button>
