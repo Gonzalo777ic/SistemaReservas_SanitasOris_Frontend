@@ -8,6 +8,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import {
   MdAddCircle,
+  MdCheckCircle,
   MdDelete,
   MdEdit,
   MdRefresh,
@@ -230,8 +231,8 @@ export default function HorarioDoctorPage() {
     }
   };
 
-  const handleApplyTemplate = async () => {
-    // LLAMADA REAL PARA APLICAR LA PLANTILLA
+  const handleApplyAndActivateTemplate = async () => {
+    // LLAMADA REAL PARA APLICAR Y ACTIVAR LA PLANTILLA
     if (!selectedTemplate) return;
 
     try {
@@ -239,16 +240,26 @@ export default function HorarioDoctorPage() {
         authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
       });
 
-      // El backend limpiará los horarios actuales y los reemplazará con los de la plantilla
+      // El backend ahora maneja tanto la activación como la aplicación de la plantilla
       const res = await api.post(
-        `horarios-semanales/${selectedTemplate}/aplicar_a_doctor/`,
+        `horarios-semanales/${selectedTemplate}/activar/`,
         { doctor_id: doctorId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Actualizar el estado de horarios con los datos nuevos devueltos por la API
+      // Actualizar el estado con los nuevos horarios y el estado de las plantillas
       setHorarios(res.data.horarios_actualizados);
-      console.log(`Plantilla aplicada con éxito.`);
+
+      // Volver a cargar las plantillas para que se actualice el marcador (Activo)
+      const savedTemplatesRes = await api.get(
+        `horarios-semanales/?doctor_id=${doctorId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setSavedSchedules(savedTemplatesRes.data);
+
+      console.log(`Plantilla aplicada y activada con éxito.`);
     } catch (err) {
       console.error(
         "Error al aplicar la plantilla:",
@@ -297,6 +308,67 @@ export default function HorarioDoctorPage() {
       console.log("Horario eliminado del front (soft delete en DB)");
     } catch (err) {
       console.error("Error al desactivar horario:", err.response?.data || err);
+    }
+  };
+
+  const handleApplyTemplate = async () => {
+    if (!selectedTemplate) return;
+
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
+      });
+
+      // Llama al endpoint que solo aplica la plantilla, sin activarla
+      const res = await api.post(
+        `horarios-semanales/${selectedTemplate}/aplicar_a_doctor/`,
+        { doctor_id: doctorId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Actualizar el estado con los nuevos horarios
+      setHorarios(res.data.horarios_actualizados);
+
+      console.log(`Plantilla aplicada con éxito.`);
+    } catch (err) {
+      console.error(
+        "Error al aplicar la plantilla:",
+        err.response?.data || err
+      );
+    }
+  };
+
+  // ⭐ Nueva función para manejar el botón "Activar"
+  const handleActivateTemplate = async () => {
+    if (!selectedTemplate) return;
+
+    try {
+      const token = await getAccessTokenSilently({
+        authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
+      });
+
+      // Llama al endpoint que activa la plantilla
+      await api.post(
+        `horarios-semanales/${selectedTemplate}/activar/`,
+        { doctor_id: doctorId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Recargar las plantillas para que el marcador '(Activo)' se actualice
+      const savedTemplatesRes = await api.get(
+        `horarios-semanales/?doctor_id=${doctorId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setSavedSchedules(savedTemplatesRes.data);
+
+      console.log(`Plantilla activada con éxito.`);
+    } catch (err) {
+      console.error(
+        "Error al activar la plantilla:",
+        err.response?.data || err
+      );
     }
   };
 
@@ -409,6 +481,7 @@ export default function HorarioDoctorPage() {
         </Card>
 
         {/* Botones para guardar y cargar plantillas */}
+
         <div className="d-flex justify-content-center gap-3 mb-4">
           <Button variant="success" onClick={() => setShowSaveModal(true)}>
             <MdSave className="me-2" />
@@ -419,20 +492,32 @@ export default function HorarioDoctorPage() {
             value={selectedTemplate}
             onChange={(e) => setSelectedTemplate(e.target.value)}
           >
-            <option value="">Cargar horario guardado...</option>
+            <option value="">Selecciona una plantilla...</option>
             {savedSchedules.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.nombre}
+                {t.nombre} {t.es_activo ? "(Activo)" : ""}
               </option>
             ))}
           </Form.Select>
+
+          {/* ⭐ Botón para solo VER el horario en el calendario */}
           <Button
-            variant="secondary"
+            variant="info"
             onClick={handleApplyTemplate}
             disabled={!selectedTemplate}
           >
             <MdRefresh className="me-2" />
-            Aplicar
+            Ver Horario
+          </Button>
+
+          {/* ⭐ Botón para ACTIVAR la plantilla para los clientes */}
+          <Button
+            variant="secondary"
+            onClick={handleActivateTemplate}
+            disabled={!selectedTemplate}
+          >
+            <MdCheckCircle className="me-2" />
+            Activar
           </Button>
         </div>
 
