@@ -3,10 +3,12 @@ import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 import RedirectByRole from "./components/RedirectByRole";
 import UserSync from "./components/UserSync";
+import CitasDoctorPage from "./pages/CitasDoctorPage";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardDoctor from "./pages/DashboardDoctor";
 import DashboardPaciente from "./pages/DashboardPaciente";
 import HorarioDoctorPage from "./pages/HorarioDoctorPage";
+import PacientesDoctorPage from "./pages/PacientesDoctorPage";
 import PatientsAdmin from "./pages/PatientsAdmin"; // 👈 Importamos la nueva página
 import ReservasAdmin from "./pages/ReservasAdmin";
 import ReservasPacientePage from "./pages/ReservasPacientePage";
@@ -70,6 +72,24 @@ function App() {
           element={
             <PrivateRoute allowedRoles={["doctor"]}>
               <HorarioDoctorPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/pacientes-doctor"
+          element={
+            <PrivateRoute allowedRoles={["doctor"]}>
+              <PacientesDoctorPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/citas"
+          element={
+            <PrivateRoute allowedRoles={["doctor"]}>
+              <CitasDoctorPage />
             </PrivateRoute>
           }
         />

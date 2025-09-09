@@ -1,15 +1,18 @@
+// src/pages/DashboardAdmin.js
+
 import { useAuth0 } from "@auth0/auth0-react";
 import "bootstrap/dist/css/bootstrap.min.css"; // Importa los estilos de Bootstrap
 import format from "date-fns/format";
 import getDay from "date-fns/getDay";
 import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react"; // <-- Import useCallback
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/sass/styles.scss";
 import StatsCards from "../components/dashboard/StatsCards";
 import Sidebar from "../components/Sidebar";
+import { api } from "../services/api";
 import "./styles.css";
 
 // Configuración de locales para date-fns
@@ -18,7 +21,7 @@ const locales = { "es-ES": es };
 const localizer = dateFnsLocalizer({
   format,
   parse,
-  startOfWeek,
+  startOfWeek: (date) => startOfWeek(date, { locale: es, weekStartsOn: 1 }),
   getDay,
   locales,
 });
@@ -34,8 +37,8 @@ export default function DashboardAdmin() {
   const [loading, setLoading] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
 
-  // Fetch datos del dashboard
-  const fetchDashboardData = async (offset = 0) => {
+  // ⭐ Usa useCallback para memoizar la función y sus dependencias
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const token = await getAccessTokenSilently({
@@ -44,50 +47,51 @@ export default function DashboardAdmin() {
       });
 
       // 🔹 Estadísticas generales
-      const statsRes = await fetch(
-        `http://localhost:8000/api/admin/stats/?week_offset=${offset}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!statsRes.ok) throw new Error("Error al cargar estadísticas");
-      const statsData = await statsRes.json();
-      setStats(statsData);
+      const statsRes = await api.get(`admin/stats/?week_offset=${weekOffset}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStats(statsRes.data);
 
       // 🔹 Calendario: obtenemos reservas en la semana actual
-      const calendarRes = await fetch(
-        `http://localhost:8000/api/reservas/?week_offset=${offset}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!calendarRes.ok) throw new Error("Error al cargar calendario");
-      const calendarData = await calendarRes.json();
+      const calendarRes = await api.get(`reservas/?week_offset=${weekOffset}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const calendarData = calendarRes.data;
 
       // Adaptar datos para React Big Calendar
-      const adaptedAppointments = calendarData.map((r) => ({
-        title: `${r.paciente} - ${r.procedimiento}`,
-        start: new Date(r.fecha_hora),
-        end: new Date(
-          new Date(r.fecha_hora).getTime() + r.duracion_min * 60000
-        ),
-      }));
+      const adaptedAppointments = calendarData.map((r) => {
+        const procedimientoNombre = r.procedimiento
+          ? r.procedimiento.nombre
+          : "Sin Procedimiento";
+        const pacienteNombre = r.paciente
+          ? r.paciente.user.first_name + " " + r.paciente.user.last_name
+          : "Paciente Desconocido";
+
+        return {
+          title: `${pacienteNombre} - ${procedimientoNombre}`,
+          start: new Date(r.fecha_hora),
+          end: new Date(
+            new Date(r.fecha_hora).getTime() + r.duracion_min * 60000
+          ),
+        };
+      });
       setAppointments(adaptedAppointments);
     } catch (err) {
       console.error("❌ Error cargando datos del dashboard:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAccessTokenSilently, weekOffset]); // <-- Agrega weekOffset aquí
 
+  // ⭐ Ahora, el useEffect depende de fetchDashboardData
   useEffect(() => {
-    fetchDashboardData(weekOffset);
-  }, [weekOffset]);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   return (
     <div className="d-flex vh-100 bg-light font-sans">
       {/* Sidebar */}
-      <Sidebar userRole="admin" /> {/* Aquí se usa el nuevo componente */}
+      <Sidebar userRole="admin" />
       {/* Main Content */}
       <main className="flex-grow-1 p-3 overflow-auto">
         <div className="mb-4">

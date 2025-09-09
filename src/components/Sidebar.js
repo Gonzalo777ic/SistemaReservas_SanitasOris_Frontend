@@ -15,12 +15,13 @@ const adminLinks = [
   { name: "Pacientes", href: "/pacientes", icon: MdPeople },
   { name: "Reservas", href: "/reservas-admin", icon: MdDateRange },
   { name: "Users", href: "/users", icon: MdApps },
+  { name: "Procedimientos", href: "/procedimientos", icon: MdHealing },
 ];
 
 const doctorLinks = [
   { name: "Dashboard", href: "/dashboard-doctor", icon: MdDashboard },
   { name: "Horario", href: "/horario-doctor", icon: MdDashboard },
-  { name: "Pacientes", href: "/pacientes", icon: MdPeople },
+  { name: "Mis pacientes", href: "/pacientes-doctor", icon: MdPeople },
   { name: "Citas", href: "/citas", icon: MdDateRange },
   { name: "Mensajes", href: "/mensajes", icon: MdMessage },
   { name: "Perfil", href: "/perfil-doctor", icon: MdPerson },
@@ -29,6 +30,8 @@ const doctorLinks = [
 const patientLinks = [
   { name: "Dashboard", href: "/dashboard-paciente", icon: MdDashboard },
   { name: "Reservar Cita", href: "/reservar", icon: MdDateRange },
+  { name: "Mensajes", href: "/mensajes", icon: MdPerson },
+
   { name: "Historial", href: "/historial-citas", icon: MdHealing },
   { name: "Perfil", href: "/perfil-paciente", icon: MdPerson },
 ];
