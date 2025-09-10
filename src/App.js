@@ -9,7 +9,8 @@ import DashboardDoctor from "./pages/DashboardDoctor";
 import DashboardPaciente from "./pages/DashboardPaciente";
 import HorarioDoctorPage from "./pages/HorarioDoctorPage";
 import PacientesDoctorPage from "./pages/PacientesDoctorPage";
-import PatientsAdmin from "./pages/PatientsAdmin"; // 👈 Importamos la nueva página
+import PatientsAdmin from "./pages/PatientsAdmin";
+import ProfilePage from "./pages/ProfilePage";
 import ReservasAdmin from "./pages/ReservasAdmin";
 import ReservasPacientePage from "./pages/ReservasPacientePage";
 import ReservasPage from "./pages/ReservasPage";
@@ -22,114 +23,41 @@ function App() {
       <UserSync />
       <Routes>
         {/* 🚀 Punto de entrada: redirige al dashboard correcto */}
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <RedirectByRole />
-            </PrivateRoute>
-          }
-        />
+        <Route element={<PrivateRoute />}>
+          <Route path="/" element={<RedirectByRole />} />
+        </Route>
 
         {/* Paciente */}
-        <Route
-          path="/dashboard-paciente"
-          element={
-            <PrivateRoute allowedRoles={["paciente"]}>
-              <DashboardPaciente />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reservas"
-          element={
-            <PrivateRoute allowedRoles={["paciente"]}>
-              <ReservasPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/reservar"
-          element={
-            <PrivateRoute allowedRoles={["paciente"]}>
-              <ReservasPacientePage />
-            </PrivateRoute>
-          }
-        />
+        <Route element={<PrivateRoute allowedRoles={["paciente"]} />}>
+          <Route path="/dashboard-paciente" element={<DashboardPaciente />} />
+          <Route path="/reservas" element={<ReservasPage />} />
+          <Route path="/reservar" element={<ReservasPacientePage />} />
+        </Route>
 
         {/* Doctor */}
-        <Route
-          path="/dashboard-doctor"
-          element={
-            <PrivateRoute allowedRoles={["doctor"]}>
-              <DashboardDoctor />
-            </PrivateRoute>
-          }
-        />
+        <Route element={<PrivateRoute allowedRoles={["doctor"]} />}>
+          <Route path="/dashboard-doctor" element={<DashboardDoctor />} />
+          <Route path="/horario-doctor" element={<HorarioDoctorPage />} />
+          <Route path="/pacientes-doctor" element={<PacientesDoctorPage />} />
+          <Route path="/citas" element={<CitasDoctorPage />} />
+        </Route>
 
+        {/* Perfil compartido */}
         <Route
-          path="/horario-doctor"
           element={
-            <PrivateRoute allowedRoles={["doctor"]}>
-              <HorarioDoctorPage />
-            </PrivateRoute>
+            <PrivateRoute allowedRoles={["doctor", "paciente", "admin"]} />
           }
-        />
-
-        <Route
-          path="/pacientes-doctor"
-          element={
-            <PrivateRoute allowedRoles={["doctor"]}>
-              <PacientesDoctorPage />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/citas"
-          element={
-            <PrivateRoute allowedRoles={["doctor"]}>
-              <CitasDoctorPage />
-            </PrivateRoute>
-          }
-        />
+        >
+          <Route path="/perfil" element={<ProfilePage />} />
+        </Route>
 
         {/* Admin */}
-        <Route
-          path="/dashboard-admin"
-          element={
-            <PrivateRoute allowedRoles={["admin"]}>
-              <DashboardAdmin />
-            </PrivateRoute>
-          }
-        />
-        {/* 📋 Nueva ruta para la gestión de pacientes (solo para admin) */}
-        <Route
-          path="/pacientes"
-          element={
-            <PrivateRoute allowedRoles={["admin"]}>
-              <PatientsAdmin />
-            </PrivateRoute>
-          }
-        />
-        {/* 📋 Nueva ruta para la gestión de pacientes (solo para admin) */}
-        <Route
-          path="/reservas-admin"
-          element={
-            <PrivateRoute allowedRoles={["admin"]}>
-              <ReservasAdmin />
-            </PrivateRoute>
-          }
-        />
-        {/* 📋 Nueva ruta para la gestión de pacientes (solo para admin) */}
-        <Route
-          path="/users"
-          element={
-            <PrivateRoute allowedRoles={["admin"]}>
-              <UsersAdmin />
-            </PrivateRoute>
-          }
-        />
+        <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+          <Route path="/dashboard-admin" element={<DashboardAdmin />} />
+          <Route path="/pacientes" element={<PatientsAdmin />} />
+          <Route path="/reservas-admin" element={<ReservasAdmin />} />
+          <Route path="/users" element={<UsersAdmin />} />
+        </Route>
       </Routes>
     </Router>
   );

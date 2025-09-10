@@ -1,8 +1,9 @@
 // src/components/PrivateRoute.js
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
 
-export default function PrivateRoute({ children, allowedRoles }) {
+export default function PrivateRoute({ allowedRoles }) {
   const {
     isAuthenticated,
     isLoading,
@@ -15,7 +16,7 @@ export default function PrivateRoute({ children, allowedRoles }) {
   useEffect(() => {
     const fetchRole = async () => {
       if (!isAuthenticated) return;
-
+      setLoadingRole(true); // <--- Aseguramos que el estado de carga esté en true
       try {
         const token = await getAccessTokenSilently({
           authorizationParams: {
@@ -24,13 +25,11 @@ export default function PrivateRoute({ children, allowedRoles }) {
         });
 
         const res = await fetch("http://localhost:8000/api/whoami/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = await res.json();
-        console.log("👤 whoami FRONT:", data); // 👈 log para ver qué llega
+        console.log("👤 whoami FRONT:", data);
         setRole(data.role);
       } catch (err) {
         console.error("❌ Error obteniendo rol:", err);
@@ -42,16 +41,13 @@ export default function PrivateRoute({ children, allowedRoles }) {
     fetchRole();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  if (isLoading || loadingRole) return <div>Cargando...</div>;
+  if (isLoading) return <div>Cargando...</div>;
 
   if (!isAuthenticated) {
     loginWithRedirect();
     return null;
   }
 
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    return <div>No autorizado</div>;
-  }
-
-  return children;
+  // Ahora, siempre pasamos el estado de carga junto con el rol
+  return <Outlet context={{ role, loadingRole }} />;
 }

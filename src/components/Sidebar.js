@@ -3,7 +3,6 @@ import {
   MdDashboard,
   MdDateRange,
   MdHealing,
-  MdMessage,
   MdPeople,
   MdPerson,
 } from "react-icons/md";
@@ -16,6 +15,7 @@ const adminLinks = [
   { name: "Reservas", href: "/reservas-admin", icon: MdDateRange },
   { name: "Users", href: "/users", icon: MdApps },
   { name: "Procedimientos", href: "/procedimientos", icon: MdHealing },
+  { name: "Perfil", href: "/perfil", icon: MdPerson },
 ];
 
 const doctorLinks = [
@@ -23,25 +23,25 @@ const doctorLinks = [
   { name: "Horario", href: "/horario-doctor", icon: MdDashboard },
   { name: "Mis pacientes", href: "/pacientes-doctor", icon: MdPeople },
   { name: "Citas", href: "/citas", icon: MdDateRange },
-  { name: "Mensajes", href: "/mensajes", icon: MdMessage },
-  { name: "Perfil", href: "/perfil-doctor", icon: MdPerson },
+  { name: "Perfil", href: "/perfil", icon: MdPerson },
 ];
 
 const patientLinks = [
   { name: "Dashboard", href: "/dashboard-paciente", icon: MdDashboard },
   { name: "Reservar Cita", href: "/reservar", icon: MdDateRange },
-  { name: "Mensajes", href: "/mensajes", icon: MdPerson },
-
   { name: "Historial", href: "/historial-citas", icon: MdHealing },
-  { name: "Perfil", href: "/perfil-paciente", icon: MdPerson },
+  { name: "Perfil", href: "/perfil", icon: MdPerson },
 ];
 
-const Sidebar = ({ userRole = "patient" }) => {
-  const links = {
-    admin: adminLinks,
-    doctor: doctorLinks,
-    patient: patientLinks,
-  }[userRole];
+const Sidebar = ({ userRole }) => {
+  // 👈 Eliminamos el valor por defecto aquí
+  // 👈 Obtenemos los links del objeto y usamos un array vacío como fallback
+  const links =
+    {
+      admin: adminLinks,
+      doctor: doctorLinks,
+      paciente: patientLinks,
+    }[userRole] || []; // <-- Solución: Si no hay match, usa un array vacío.
 
   return (
     <aside
@@ -58,10 +58,11 @@ const Sidebar = ({ userRole = "patient" }) => {
       </div>
       <nav className="flex-grow-1 p-2">
         <ul className="nav flex-column">
+          {/* El .map() ahora siempre recibirá un array, vacío o no. */}
           {links.map((link) => (
             <li className="nav-item" key={link.name}>
               <NavLink
-                to={link.href} // ✨ Aquí cambiamos 'href' por 'to'
+                to={link.href}
                 className={({ isActive }) =>
                   `nav-link rounded ${
                     isActive

@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/sass/styles.scss";
-import { Card, Button, Modal } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar"; // Importa el Sidebar correctamente
 import { api } from "../services/api";
@@ -136,7 +136,7 @@ export default function DashboardPaciente() {
   return (
     <div className="d-flex vh-100 bg-light font-sans">
       {/* 🟢 El cambio está aquí. Le pasamos explícitamente el rol al Sidebar. */}
-      <Sidebar userRole="patient" />
+      <Sidebar userRole="paciente" />
       <main className="flex-grow-1 p-3 overflow-auto">
         <h1 className="h4 fw-bold text-dark">Bienvenido, {patientName} 👋</h1>
         <p className="text-secondary">
