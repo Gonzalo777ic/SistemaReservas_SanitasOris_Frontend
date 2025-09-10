@@ -1,13 +1,7 @@
 // src/components/reservas/ProcedimientosCarousel.js DUMMY
 import { useState } from "react";
 
-const procedimientosMock = [
-  { id: 1, nombre: "Consulta general", duracion: 30, img: "/img/consulta.png" },
-  { id: 2, nombre: "Limpieza dental", duracion: 40, img: "/img/limpieza.png" },
-  { id: 3, nombre: "Curación de caries", duracion: 60, img: "/img/caries.png" },
-];
-
-export default function ProcedimientosCarousel({ onSelect }) {
+export default function ProcedimientosCarousel({ procedimientos, onSelect }) {
   const [seleccionado, setSeleccionado] = useState(null);
 
   const handleSelect = (proc) => {
@@ -15,11 +9,17 @@ export default function ProcedimientosCarousel({ onSelect }) {
     onSelect(proc); // se pasa al padre
   };
 
+  // 👈 Manejar el caso de que no haya procedimientos
+  if (!procedimientos || procedimientos.length === 0) {
+    return <p>No hay procedimientos disponibles.</p>;
+  }
+
   return (
     <div>
       <h3>Selecciona un procedimiento</h3>
       <div style={{ display: "flex", gap: "1rem", overflowX: "auto" }}>
-        {procedimientosMock.map((proc) => (
+        {/* 👈 Usar la prop 'procedimientos' para renderizar */}
+        {procedimientos.map((proc) => (
           <div
             key={proc.id}
             onClick={() => handleSelect(proc)}
@@ -35,9 +35,14 @@ export default function ProcedimientosCarousel({ onSelect }) {
               textAlign: "center",
             }}
           >
-            <img src={proc.img} alt={proc.nombre} width="100" />
+            {/* Puedes usar una imagen por defecto o un icono si proc.img no existe */}
+            <img
+              src={proc.img || "/img/default.png"}
+              alt={proc.nombre}
+              width="100"
+            />
             <p>{proc.nombre}</p>
-            <small>{proc.duracion} min</small>
+            <small>{proc.duracion_min} min</small>
           </div>
         ))}
       </div>
