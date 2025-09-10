@@ -35,3 +35,32 @@
 .rbc-day-bg {
   background-color: #ffffff;
 }
+.message-container {
+  position: fixed;
+  bottom: 20px; /* Ambas en la parte inferior */
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  color: white;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.5s ease-in-out;
+  opacity: 1;
+}
+
+.message-container.success {
+  background-color: #4caf50; /* Verde */
+}
+
+.message-container.error {
+  background-color: #f44336; /* Rojo */
+}
+
+/* 🔹 No se necesita la clase `top-right` */
+
+/* 🔹 La animación de ocultar solo se aplica a los mensajes temporales */
+.message-container.hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}

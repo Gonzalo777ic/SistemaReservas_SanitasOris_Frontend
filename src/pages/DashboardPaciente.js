@@ -11,8 +11,8 @@ import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/sass/styles.scss";
 import { Button, Modal } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar"; // Importa el Sidebar correctamente
+import { useLocation, useNavigate } from "react-router-dom"; // Importa useLocation
+import Sidebar from "../components/Sidebar";
 import { api } from "../services/api";
 import "./styles.css";
 
@@ -40,9 +40,10 @@ export default function DashboardPaciente() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
+  const location = useLocation(); // Hook para acceder al estado de navegación
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false); // Nuevo estado para el mensaje de éxito
 
   const fetchPatientAppointments = useCallback(async () => {
     try {
@@ -78,7 +79,17 @@ export default function DashboardPaciente() {
 
   useEffect(() => {
     fetchPatientAppointments();
-  }, [fetchPatientAppointments]);
+    // Revisa si hay un estado de éxito de reserva
+    if (location.state?.bookingSuccess) {
+      setShowSuccessMessage(true);
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+        // Limpia el estado de navegación para evitar que el mensaje se muestre de nuevo
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [fetchPatientAppointments, location, navigate]);
 
   const handleShowCancelModal = (appointment) => {
     setAppointmentToCancel(appointment);
@@ -135,13 +146,19 @@ export default function DashboardPaciente() {
 
   return (
     <div className="d-flex vh-100 bg-light font-sans">
-      {/* 🟢 El cambio está aquí. Le pasamos explícitamente el rol al Sidebar. */}
       <Sidebar userRole="paciente" />
       <main className="flex-grow-1 p-3 overflow-auto">
         <h1 className="h4 fw-bold text-dark">Bienvenido, {patientName} 👋</h1>
         <p className="text-secondary">
           Aquí puedes ver un resumen de tus citas.
         </p>
+
+        {showSuccessMessage && (
+          <div className="alert alert-success mt-3" role="alert">
+            Reserva hecha con éxito 🎉
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center">Cargando tus citas...</div>
         ) : error ? (
