@@ -1,10 +1,18 @@
-// src/pages/ReservasPacientePage.js
-
 import { useAuth0 } from "@auth0/auth0-react";
+import moment from "moment";
 import { useEffect, useState } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import Button from "react-bootstrap/Button"; // Importa el componente Button
+import Form from "react-bootstrap/Form"; // Importa el componente Form
+import Modal from "react-bootstrap/Modal"; // Importa el componente Modal
 import DoctoresList from "../components/reservas/DoctoresList";
 import ProcedimientosCarousel from "../components/reservas/ProcedimientosCarousel";
 import { api } from "../services/api";
+import "./ReservasPacientePage.css";
+
+// Configuración del localizador para el calendario
+const localizer = momentLocalizer(moment);
 
 export default function ReservasPacientePage() {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -19,11 +27,23 @@ export default function ReservasPacientePage() {
   const [fechaHoraSeleccionada, setFechaHoraSeleccionada] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
-  const [horaInput, setHoraInput] = useState("");
-  const [slotsGenerados, setSlotsGenerados] = useState([]);
+  const [pendingEvent, setPendingEvent] = useState(null);
+
+  // 🔹 NUEVO: Estado para controlar el modal
+  const [showModal, setShowModal] = useState(false);
+  const [modalDate, setModalDate] = useState("");
+  const [modalTime, setModalTime] = useState("");
+
+  // Funciones para abrir y cerrar el modal
+  const handleShowModal = () => setShowModal(true);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    // 🔹 Opcional: limpiar los campos del modal al cerrarlo
+    setModalDate("");
+    setModalTime("");
+  };
 
   useEffect(() => {
-    // 🔹 Cargar lista de procedimientos básicos
     const fetchProcedimientos = async () => {
       try {
         const res = await api.get("procedimientos/");
@@ -34,7 +54,6 @@ export default function ReservasPacientePage() {
     };
     fetchProcedimientos();
 
-    // 🔹 Cargar lista de doctores
     const fetchDoctores = async () => {
       try {
         const res = await api.get("doctores/");
@@ -47,17 +66,24 @@ export default function ReservasPacientePage() {
   }, []);
 
   useEffect(() => {
-    // 🔹 Cargar disponibilidad al seleccionar doctor y procedimiento
     const fetchDisponibilidad = async () => {
       if (doctorSeleccionado && procedimiento) {
         setLoading(true);
         try {
           const token = await getAccessTokenSilently();
+          const startDate = moment().format("YYYY-MM-DD");
+          const endDate = moment()
+            .add(3, "weeks")
+            .endOf("week")
+            .format("YYYY-MM-DD");
+
           const res = await api.get(`reservas/disponibilidad/`, {
             headers: { Authorization: `Bearer ${token}` },
             params: {
               doctor_id: doctorSeleccionado.id,
               procedimiento_id: procedimiento.id,
+              start_date: startDate,
+              end_date: endDate,
             },
           });
 
@@ -79,7 +105,6 @@ export default function ReservasPacientePage() {
   }, [doctorSeleccionado, procedimiento, getAccessTokenSilently]);
 
   const handleReserva = async () => {
-    // 🔹 Lógica para crear la reserva
     setLoading(true);
     try {
       const token = await getAccessTokenSilently();
@@ -108,6 +133,7 @@ export default function ReservasPacientePage() {
       setDoctorSeleccionado(null);
       setFechaHoraSeleccionada(null);
       setDisponibilidad({ bloques: [], citas: [] });
+      setPendingEvent(null);
     } catch (error) {
       console.error("Error al reservar cita:", error.response?.data || error);
       setMensaje("❌ Ocurrió un error al reservar la cita.");
@@ -116,88 +142,70 @@ export default function ReservasPacientePage() {
     }
   };
 
-  const handleGenerateSlots = () => {
-    setMensaje("");
-    setSlotsGenerados([]);
-
-    const [hour, minute] = horaInput.split(":").map(Number);
-    if (
-      isNaN(hour) ||
-      isNaN(minute) ||
-      hour < 0 ||
-      hour > 23 ||
-      minute < 0 ||
-      minute > 59
-    ) {
-      setMensaje("❌ Por favor, ingrese un formato de hora válido (HH:MM).");
-      return;
-    }
-
-    const todayDate = new Date();
-    todayDate.setHours(0, 0, 0, 0);
-
-    const availableBlock = disponibilidad.bloques.find((bloque) => {
+  const handleSelectSlot = ({ start }) => {
+    const isSlotAvailable = disponibilidad.bloques.some((bloque) => {
       const blockStart = new Date(bloque.start);
       const blockEnd = new Date(bloque.end);
-
-      const inputDateTime = new Date(blockStart);
-      inputDateTime.setHours(hour, minute, 0, 0);
-
-      return inputDateTime >= blockStart && inputDateTime <= blockEnd;
+      return start >= blockStart && start < blockEnd;
     });
 
-    if (!availableBlock) {
-      setMensaje(
-        "❌ La hora ingresada no está dentro de un bloque disponible."
-      );
-      return;
-    }
+    const isSlotBooked = disponibilidad.citas.some((cita) => {
+      const citaStart = new Date(cita.start);
+      const citaEnd = new Date(cita.end);
+      return start >= citaStart && start < citaEnd;
+    });
 
-    const { start, end } = availableBlock;
-    const blockStart = new Date(start);
-    const blockEnd = new Date(end);
-    const generatedSlots = [];
+    const slotEnd = new Date(
+      start.getTime() + procedimiento.duracion_min * 60000
+    );
+    const isLongEnough = disponibilidad.bloques.some((bloque) => {
+      const blockStart = new Date(bloque.start);
+      const blockEnd = new Date(bloque.end);
+      return start >= blockStart && slotEnd <= blockEnd;
+    });
 
-    const now = new Date();
+    const isPast = new Date() > start;
 
-    // Create a date object for today with the input time
-    const today = new Date();
-    today.setHours(hour, minute, 0, 0);
-
-    let currentTime = today;
-
-    while (
-      currentTime.getTime() + procedimiento.duracion_min * 60000 <=
-      blockEnd.getTime()
-    ) {
-      const isBooked = disponibilidad.citas.some((cita) => {
-        const citaStart = new Date(cita.start);
-        const citaEnd = new Date(cita.end);
-        return (
-          currentTime < citaEnd &&
-          new Date(currentTime.getTime() + procedimiento.duracion_min * 60000) >
-            citaStart
-        );
+    if (isSlotAvailable && !isSlotBooked && isLongEnough && !isPast) {
+      setFechaHoraSeleccionada(start.toISOString());
+      setMensaje(`✅ Has seleccionado: ${moment(start).format("LLL")}`);
+      setPendingEvent({
+        title: "Pendiente",
+        start,
+        end: slotEnd,
       });
-
-      if (!isBooked && currentTime >= now) {
-        generatedSlots.push(currentTime.toISOString());
-      }
-      currentTime = new Date(
-        currentTime.getTime() + procedimiento.duracion_min * 60000
-      );
-    }
-
-    if (generatedSlots.length > 0) {
-      setSlotsGenerados(generatedSlots);
-      setMensaje("✅ Horarios generados. Por favor, seleccione uno.");
     } else {
-      setMensaje("❌ No hay slots disponibles en este bloque.");
+      setMensaje("❌ El horario seleccionado no está disponible.");
+      setFechaHoraSeleccionada(null);
+      setPendingEvent(null);
     }
   };
 
+  // 🔹 NUEVO: Función para manejar la confirmación desde el modal
+  const handleModalConfirmation = () => {
+    if (modalDate && modalTime) {
+      const selectedDateTime = moment(`${modalDate} ${modalTime}`).toDate();
+      handleSelectSlot({ start: selectedDateTime });
+      handleCloseModal();
+    } else {
+      setMensaje("❌ Por favor, ingresa una fecha y hora válidas.");
+    }
+  };
+
+  const reservedEvents = disponibilidad.citas
+    .filter((cita) => new Date(cita.end) > new Date())
+    .map((cita) => ({
+      start: new Date(cita.start),
+      end: new Date(cita.end),
+      title: "Reservado",
+    }));
+
+  const allEvents = pendingEvent
+    ? [...reservedEvents, pendingEvent]
+    : reservedEvents;
+
   return (
-    <div style={{ padding: "2rem", maxWidth: "500px", margin: "0 auto" }}>
+    <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
       <h2>Reservar nueva cita</h2>
       <p>Paciente: {user?.name || "Paciente"}</p>
 
@@ -226,72 +234,87 @@ export default function ReservasPacientePage() {
       {procedimiento && doctorSeleccionado && (
         <div>
           <h3>3. Elige fecha y hora</h3>
+          <p>
+            Puedes seleccionar una hora en el calendario o usar la opción
+            manual.
+          </p>
+          {/* 🔹 NUEVO: Botón para abrir el modal */}
+          <Button
+            variant="primary"
+            onClick={handleShowModal}
+            style={{ marginBottom: "1rem" }}
+          >
+            Elegir momento de reserva
+          </Button>
           {loading ? (
             <p>Cargando horarios disponibles...</p>
           ) : (
             <div>
               {disponibilidad.bloques.length > 0 ? (
-                <>
-                  <p>
-                    **Ingresa una hora para ver los slots disponibles (ej.
-                    09:30):**
-                  </p>
-                  <input
-                    type="time"
-                    value={horaInput}
-                    onChange={(e) => setHoraInput(e.target.value)}
-                  />
-                  <button
-                    onClick={handleGenerateSlots}
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Generar Slots
-                  </button>
+                <Calendar
+                  localizer={localizer}
+                  events={allEvents}
+                  defaultView="week"
+                  views={["week", "day"]}
+                  selectable
+                  onSelectSlot={handleSelectSlot}
+                  style={{ height: 800 }}
+                  step={procedimiento.duracion_min}
+                  min={moment().startOf("day").toDate()}
+                  max={moment().endOf("day").toDate()}
+                  slotPropGetter={(date) => {
+                    const isAvailable = disponibilidad.bloques.some(
+                      (bloque) => {
+                        const start = new Date(bloque.start);
+                        const end = new Date(bloque.end);
+                        return date >= start && date < end;
+                      }
+                    );
+                    const isPast = date < new Date();
 
-                  <div style={{ marginTop: "1rem" }}>
-                    {slotsGenerados.length > 0 ? (
-                      <>
-                        <p>**Slots disponibles:**</p>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "0.5rem",
-                          }}
-                        >
-                          {slotsGenerados.map((slot, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setFechaHoraSeleccionada(slot)}
-                              style={{
-                                padding: "0.5rem 1rem",
-                                border: "1px solid #ddd",
-                                backgroundColor:
-                                  fechaHoraSeleccionada === slot
-                                    ? "#27ae60"
-                                    : "white",
-                                color:
-                                  fechaHoraSeleccionada === slot
-                                    ? "white"
-                                    : "black",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {new Date(slot).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <p>Ingresa una hora válida y genera slots.</p>
-                    )}
-                  </div>
-                </>
+                    if (!isAvailable || isPast) {
+                      return {
+                        style: {
+                          backgroundColor: "#EBEBEB",
+                          opacity: 0.7,
+                        },
+                      };
+                    }
+                    return {
+                      style: {
+                        backgroundColor: "#FFFFFF",
+                      },
+                    };
+                  }}
+                  eventPropGetter={(event) => {
+                    if (event.title === "Pendiente") {
+                      return {
+                        style: {
+                          backgroundColor: "#90CAF9",
+                          borderRadius: "4px",
+                          opacity: 0.9,
+                          color: "#333333",
+                          border: "1px solid #42A5F5",
+                          display: "block",
+                          padding: "2px 5px",
+                        },
+                      };
+                    }
+                    return {
+                      style: {
+                        backgroundColor: "#F8BBD0",
+                        borderRadius: "4px",
+                        opacity: 0.9,
+                        color: "#333333",
+                        border: "1px solid #F06292",
+                        display: "block",
+                        padding: "2px 5px",
+                      },
+                    };
+                  }}
+                />
               ) : (
-                <p>No hay horarios disponibles para este día.</p>
+                <p>No hay horarios disponibles para este doctor.</p>
               )}
             </div>
           )}
@@ -318,6 +341,41 @@ export default function ReservasPacientePage() {
       )}
 
       {mensaje && <p style={{ marginTop: "1rem" }}>{mensaje}</p>}
+
+      {/* 🔹 NUEVO: Modal de selección de fecha y hora */}
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Elegir Fecha y Hora</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Fecha</Form.Label>
+              <Form.Control
+                type="date"
+                value={modalDate}
+                onChange={(e) => setModalDate(e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Hora</Form.Label>
+              <Form.Control
+                type="time"
+                value={modalTime}
+                onChange={(e) => setModalTime(e.target.value)}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleModalConfirmation}>
+            Seleccionar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

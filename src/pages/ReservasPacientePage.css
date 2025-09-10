@@ -1,0 +1,37 @@
+/* src/pages/ReservasPacientePage.css */
+
+/* Estilo para la columna de horas (rbc-time-gutter) */
+.rbc-time-gutter {
+  background-color: white; /* Amarillo pastel */
+  opacity: 1 !important; /* Asegura que no se vea opaco */
+}
+
+/* Estilo para las etiquetas de hora dentro de la columna */
+.rbc-time-gutter .rbc-label {
+  color: #333333; /* Color de texto oscuro para contraste */
+  font-weight: bold; /* Para que las horas destaquen un poco más */
+}
+
+/* Otros estilos generales si los necesitas */
+/* Por ejemplo, para el encabezado del calendario */
+.rbc-header {
+  background-color: #f0f0f0; /* Un gris claro para el encabezado de días */
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.rbc-date-cell {
+  padding: 5px;
+  font-weight: bold;
+}
+
+/* Asegura que el área de contenido del calendario no sea opaca */
+.rbc-month-view,
+.rbc-time-view {
+  opacity: 1 !important;
+}
+
+/* Define el color de fondo de los slots disponibles para que sea consistente */
+.rbc-day-bg {
+  background-color: #ffffff;
+}
