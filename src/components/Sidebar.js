@@ -22,11 +22,6 @@ const doctorLinks = [
   { name: "Dashboard", href: "/dashboard-doctor", icon: MdDashboard },
   { name: "Horario", href: "/horario-doctor", icon: MdDashboard },
   { name: "Mis pacientes", href: "/pacientes-doctor", icon: MdPeople },
-  {
-    name: "Mis procedimientos",
-    href: "/procedimientos-doctor",
-    icon: MdPeople,
-  },
   { name: "Citas", href: "/citas", icon: MdDateRange },
   { name: "Perfil", href: "/perfil", icon: MdPerson },
 ];

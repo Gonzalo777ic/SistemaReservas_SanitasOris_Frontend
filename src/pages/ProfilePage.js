@@ -14,6 +14,7 @@ const ProfilePage = () => {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [procedimientos, setProcedimientos] = useState([]); // <-- Nuevo estado para procedimientos
 
   useEffect(() => {
     if (!user || !userRole) return;
@@ -31,6 +32,7 @@ const ProfilePage = () => {
         if (userRole === "paciente") {
           apiUrl = "http://localhost:8000/api/pacientes/";
         } else if (userRole === "doctor") {
+          // <-- Para doctores, usaremos la vista de doctores que incluye los procedimientos
           apiUrl = "http://localhost:8000/api/doctores/";
         } else if (userRole === "admin") {
           setProfile({
@@ -61,6 +63,8 @@ const ProfilePage = () => {
           setPhoneNumber(userProfile.telefono || "");
           if (userRole === "doctor") {
             setSpecialty(userProfile.especialidad || "");
+            // <-- Guarda la lista de procedimientos
+            setProcedimientos(userProfile.procedimientos || []);
           }
         } else {
           setMessage({
@@ -300,6 +304,39 @@ const ProfilePage = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* <-- NUEVA SECCIÓN PARA PROCEDIMIENTOS --> */}
+                  {userRole === "doctor" && (
+                    <div className="mt-4 pt-4 border-top">
+                      <h5 className="mb-3">Procedimientos que realiza</h5>
+                      <p className="text-muted">
+                        Esta es la lista de los procedimientos que el
+                        administrador te ha asignado. Si necesitas agregar o
+                        eliminar alguno, por favor, notifícaselo al
+                        administrador.
+                      </p>
+                      {procedimientos.length > 0 ? (
+                        <ul className="list-group">
+                          {procedimientos.map((proc, index) => (
+                            <li
+                              key={index}
+                              className="list-group-item d-flex justify-content-between align-items-center"
+                            >
+                              {proc.nombre}
+                              <span className="badge bg-primary rounded-pill">
+                                Duración: {proc.duracion_min} min
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="alert alert-warning" role="alert">
+                          Actualmente no tienes procedimientos asignados.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* <-- FIN DE LA NUEVA SECCIÓN --> */}
                 </div>
               </div>
             </div>

@@ -13,6 +13,7 @@ import {
   Table,
 } from "react-bootstrap";
 import { MdAdd, MdDelete, MdEdit } from "react-icons/md";
+import Select from "react-select";
 import Sidebar from "../components/Sidebar";
 import { api } from "../services/api";
 import "./styles.css";
@@ -20,6 +21,7 @@ import "./styles.css";
 export default function ProcedimientosPage() {
   const { getAccessTokenSilently } = useAuth0();
   const [procedimientos, setProcedimientos] = useState([]);
+  const [doctores, setDoctores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -31,32 +33,56 @@ export default function ProcedimientosPage() {
     duracion_min: 0,
     activo: true,
     imagen: null,
+    doctores: [],
   });
 
-  const fetchProcedimientos = useCallback(async () => {
+  // Transforma los datos de los doctores para que sean compatibles con react-select
+  const doctorOptions = doctores.map((d) => ({
+    value: d.id,
+    label: `${d.nombre} - ${d.especialidad}`,
+  }));
+
+  const handleSelectChange = (selectedOptions) => {
+    // selectedOptions es un array de objetos { value, label }
+    const selectedDoctorIds = selectedOptions.map((option) => option.value);
+    setFormData({
+      ...formData,
+      doctores: selectedDoctorIds,
+    });
+  };
+
+  const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
       const token = await getAccessTokenSilently({
         authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
       });
-      const response = await api.get("procedimientos/", {
+
+      // Fetch all procedures
+      const procedimientosRes = await api.get("procedimientos/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProcedimientos(response.data);
+      setProcedimientos(procedimientosRes.data);
+
+      // Fetch all doctors
+      const doctoresRes = await api.get("doctores/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDoctores(doctoresRes.data);
+
       setLoading(false);
     } catch (err) {
-      console.error("Error al cargar procedimientos:", err);
-      setError("Error al cargar la lista de procedimientos.");
+      console.error("Error al cargar los datos:", err);
+      setError("Error al cargar los procedimientos y doctores.");
       setLoading(false);
     }
   }, [getAccessTokenSilently]);
 
   useEffect(() => {
-    fetchProcedimientos();
-  }, [fetchProcedimientos]);
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleOpenModal = (procedimiento = null) => {
-    // Si no se pasa un procedimiento, se asume que es una creación
     const isEditingMode = !!procedimiento;
     setIsEditing(isEditingMode);
     setCurrentProcedimiento(procedimiento);
@@ -66,7 +92,8 @@ export default function ProcedimientosPage() {
       descripcion: procedimiento?.descripcion || "",
       duracion_min: procedimiento?.duracion_min || 30,
       activo: procedimiento?.activo ?? true,
-      imagen: null, // No se pre-carga el archivo para evitar errores
+      imagen: null,
+      doctores: procedimiento?.doctores || [],
     });
     setShowModal(true);
   };
@@ -79,17 +106,32 @@ export default function ProcedimientosPage() {
       duracion_min: 30,
       activo: true,
       imagen: null,
+      doctores: [],
     });
     setCurrentProcedimiento(null);
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]:
-        type === "checkbox" ? checked : type === "file" ? files[0] : value,
-    });
+    const { name, value, type, checked, files, options } = e.target;
+
+    if (name === "doctores") {
+      // Logic to handle multi-select input for doctors
+      const selectedOptions = Array.from(options)
+        .filter((option) => option.selected)
+        .map((option) => parseInt(option.value, 10));
+
+      setFormData({
+        ...formData,
+        [name]: selectedOptions,
+      });
+    } else {
+      // Logic for all other input types
+      setFormData({
+        ...formData,
+        [name]:
+          type === "checkbox" ? checked : type === "file" ? files[0] : value,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -108,6 +150,9 @@ export default function ProcedimientosPage() {
       if (formData.imagen) {
         dataToSubmit.append("imagen", formData.imagen);
       }
+      formData.doctores.forEach((doctorId) => {
+        dataToSubmit.append("doctores", doctorId);
+      });
 
       if (isEditing) {
         await api.put(
@@ -129,7 +174,7 @@ export default function ProcedimientosPage() {
         });
       }
       handleCloseModal();
-      fetchProcedimientos();
+      fetchAllData();
     } catch (err) {
       console.error("Error al guardar el procedimiento:", err);
       setError("Error al guardar el procedimiento.");
@@ -152,7 +197,7 @@ export default function ProcedimientosPage() {
       await api.delete(`procedimientos/${id}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchProcedimientos();
+      fetchAllData();
     } catch (err) {
       console.error("Error al eliminar el procedimiento:", err);
       setError("Error al eliminar el procedimiento.");
@@ -166,13 +211,13 @@ export default function ProcedimientosPage() {
         {`
             .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
             .image-preview {
-                max-width: 100px; /* Para la tabla */
-                max-height: 100px; /* Para la tabla */
+                max-width: 100px;
+                max-height: 100px;
                 object-fit: contain;
             }
-            .image-preview-modal { /* Nueva clase para el modal */
-                max-width: 2500px; /* Aumenta el tamaño en el modal */
-                max-height: 2500px; /* Aumenta el tamaño en el modal */
+            .image-preview-modal {
+                max-width: 2500px;
+                max-height: 2500px;
                 object-fit: contain;
             }
             `}
@@ -217,6 +262,7 @@ export default function ProcedimientosPage() {
                     <th>Nombre</th>
                     <th>Descripción</th>
                     <th>Duración (min)</th>
+                    <th>Doctores</th>
                     <th>Activo</th>
                     <th>Acciones</th>
                   </tr>
@@ -238,6 +284,11 @@ export default function ProcedimientosPage() {
                         <td>{p.nombre}</td>
                         <td>{p.descripcion}</td>
                         <td>{p.duracion_min}</td>
+                        <td>
+                          {p.doctores_nombres?.length > 0
+                            ? p.doctores_nombres.join(", ")
+                            : "Ninguno"}
+                        </td>
                         <td>{p.activo ? "Sí" : "No"}</td>
                         <td>
                           <Button
@@ -260,7 +311,7 @@ export default function ProcedimientosPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center text-muted">
+                      <td colSpan="8" className="text-center text-muted">
                         No hay procedimientos registrados.
                       </td>
                     </tr>
@@ -272,7 +323,7 @@ export default function ProcedimientosPage() {
         </Card>
       </Container>
 
-      {/* Modal para Crear/Editar Procedimiento */}
+      {/* Modal for Creating/Editing Procedure */}
       <Modal size="xl" show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -320,10 +371,30 @@ export default function ProcedimientosPage() {
                 onChange={handleChange}
               />
             </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Doctores que realizan este procedimiento</Form.Label>
+              <Select
+                isMulti
+                name="doctores"
+                options={doctorOptions}
+                className="basic-multi-select"
+                classNamePrefix="select"
+                onChange={handleSelectChange}
+                value={doctorOptions.filter((option) =>
+                  formData.doctores.includes(option.value)
+                )}
+              />
+              <Form.Text className="text-muted">
+                Selecciona o elimina doctores de la lista.
+              </Form.Text>
+            </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Imagen</Form.Label>
               <Form.Control type="file" name="imagen" onChange={handleChange} />
             </Form.Group>
+
             {isEditing && currentProcedimiento?.imagen && (
               <div className="mb-3 text-center">
                 <p className="mb-1">Imagen actual:</p>

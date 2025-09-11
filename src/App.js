@@ -12,7 +12,6 @@ import HistorialCitasPage from "./pages/HistorialCitasPage";
 import HorarioDoctorPage from "./pages/HorarioDoctorPage";
 import PacientesDoctorPage from "./pages/PacientesDoctorPage";
 import PatientsAdmin from "./pages/PatientsAdmin";
-import ProcedimientosDoctorPage from "./pages/ProcedimientosDoctorPage";
 import ProcedimientosPage from "./pages/ProcedimientosPage";
 import ProfilePage from "./pages/ProfilePage";
 import ReservasAdmin from "./pages/ReservasAdmin";
@@ -42,10 +41,6 @@ function App() {
           <Route path="/dashboard-doctor" element={<DashboardDoctor />} />
           <Route path="/horario-doctor" element={<HorarioDoctorPage />} />
           <Route path="/pacientes-doctor" element={<PacientesDoctorPage />} />
-          <Route
-            path="/procedimientos-doctor"
-            element={<ProcedimientosDoctorPage />}
-          />
           <Route path="/citas" element={<CitasDoctorPage />} />
         </Route>
 
