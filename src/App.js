@@ -8,13 +8,13 @@ import CitasDoctorPage from "./pages/CitasDoctorPage";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardDoctor from "./pages/DashboardDoctor";
 import DashboardPaciente from "./pages/DashboardPaciente";
+import HistorialCitasPage from "./pages/HistorialCitasPage";
 import HorarioDoctorPage from "./pages/HorarioDoctorPage";
 import PacientesDoctorPage from "./pages/PacientesDoctorPage";
 import PatientsAdmin from "./pages/PatientsAdmin";
 import ProfilePage from "./pages/ProfilePage";
 import ReservasAdmin from "./pages/ReservasAdmin";
 import ReservasPacientePage from "./pages/ReservasPacientePage";
-import ReservasPage from "./pages/ReservasPage";
 import UsersAdmin from "./pages/UsersAdmin";
 
 function App() {
@@ -31,7 +31,7 @@ function App() {
         {/* Paciente */}
         <Route element={<PrivateRoute allowedRoles={["paciente"]} />}>
           <Route path="/dashboard-paciente" element={<DashboardPaciente />} />
-          <Route path="/reservas" element={<ReservasPage />} />
+          <Route path="/historial-citas" element={<HistorialCitasPage />} />
           <Route path="/reservar" element={<ReservasPacientePage />} />
         </Route>
 
