@@ -1,32 +1,16 @@
 // src/pages/DashboardAdmin.js
 
 import { useAuth0 } from "@auth0/auth0-react";
-import "bootstrap/dist/css/bootstrap.min.css"; // Importa los estilos de Bootstrap
-import format from "date-fns/format";
-import getDay from "date-fns/getDay";
-import parse from "date-fns/parse";
-import startOfWeek from "date-fns/startOfWeek";
-import { useCallback, useEffect, useState } from "react"; // <-- Import useCallback
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import "react-big-calendar/lib/sass/styles.scss";
-import StatsCards from "../components/dashboard/StatsCards";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { useCallback, useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import AdminCalendar from "../components/admin/AdminCalendar"; // Nuevo componente
+import StatsCards from "../components/dashboard/StatsCards";
 import { api } from "../services/api";
 import "./styles.css";
 
-// Configuración de locales para date-fns
-import { es } from "date-fns/locale";
-const locales = { "es-ES": es };
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: (date) => startOfWeek(date, { locale: es, weekStartsOn: 1 }),
-  getDay,
-  locales,
-});
-
-export default function DashboardAdmin() {
+// 🆕 Nuevo custom hook para la lógica de datos
+const useAdminData = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [stats, setStats] = useState({
     citas_pendientes: 0,
@@ -35,12 +19,13 @@ export default function DashboardAdmin() {
   });
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [weekOffset, setWeekOffset] = useState(0);
 
-  // ⭐ Usa useCallback para memoizar la función y sus dependencias
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = await getAccessTokenSilently({
         authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
         cacheMode: "off",
@@ -52,7 +37,7 @@ export default function DashboardAdmin() {
       });
       setStats(statsRes.data);
 
-      // 🔹 Calendario: obtenemos reservas en la semana actual
+      // 🔹 Calendario: obtenemos reservas
       const calendarRes = await api.get(`reservas/?week_offset=${weekOffset}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -78,21 +63,26 @@ export default function DashboardAdmin() {
       setAppointments(adaptedAppointments);
     } catch (err) {
       console.error("❌ Error cargando datos del dashboard:", err);
+      setError("Error al cargar los datos del panel.");
     } finally {
       setLoading(false);
     }
-  }, [getAccessTokenSilently, weekOffset]); // <-- Agrega weekOffset aquí
+  }, [getAccessTokenSilently, weekOffset]);
 
-  // ⭐ Ahora, el useEffect depende de fetchDashboardData
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  return { stats, appointments, loading, error, weekOffset, setWeekOffset };
+};
+
+export default function DashboardAdmin() {
+  const { stats, appointments, loading, error, weekOffset, setWeekOffset } =
+    useAdminData();
+
   return (
     <div className="d-flex vh-100 bg-light font-sans">
-      {/* Sidebar */}
       <Sidebar userRole="admin" />
-      {/* Main Content */}
       <main className="flex-grow-1 p-3 overflow-auto">
         <div className="mb-4">
           <h1 className="h4 fw-bold text-dark">Panel del Administrador</h1>
@@ -101,6 +91,8 @@ export default function DashboardAdmin() {
 
         {loading ? (
           <p>Cargando datos del dashboard...</p>
+        ) : error ? (
+          <div className="alert alert-danger text-center">{error}</div>
         ) : (
           <div className="container-fluid">
             {/* Cards en fila */}
@@ -114,15 +106,7 @@ export default function DashboardAdmin() {
 
             {/* Calendar Section */}
             <div className="card shadow-sm p-4">
-              <Calendar
-                localizer={localizer}
-                events={appointments}
-                startAccessor="start"
-                endAccessor="end"
-                style={{ height: 600 }}
-                views={["week", "day"]}
-                defaultView="week"
-              />
+              <AdminCalendar appointments={appointments} />
             </div>
           </div>
         )}

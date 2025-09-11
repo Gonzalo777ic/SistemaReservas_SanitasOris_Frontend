@@ -1,20 +1,12 @@
+// src/pages/ProcedimientosPage.js
+
 import { useAuth0 } from "@auth0/auth0-react";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Container,
-  Form,
-  Modal,
-  Row,
-  Spinner,
-  Table,
-} from "react-bootstrap";
-import { MdAdd, MdDelete, MdEdit } from "react-icons/md";
-import Select from "react-select";
+import { Alert, Button, Col, Container, Row, Spinner } from "react-bootstrap";
+import { MdAdd } from "react-icons/md";
 import Sidebar from "../components/Sidebar";
+import ProcedimientoFormModal from "../components/admin/procedimientos/ProcedimientoFormModal"; // New
+import ProcedimientosTable from "../components/admin/procedimientos/ProcedimientosTable"; // New
 import { api } from "../services/api";
 import "./styles.css";
 
@@ -32,24 +24,9 @@ export default function ProcedimientosPage() {
     descripcion: "",
     duracion_min: 0,
     activo: true,
-    imagen: null,
-    doctores: [],
+    imagen: null, // File object for new image upload
+    doctores: [], // Array of doctor IDs
   });
-
-  // Transforma los datos de los doctores para que sean compatibles con react-select
-  const doctorOptions = doctores.map((d) => ({
-    value: d.id,
-    label: `${d.nombre} - ${d.especialidad}`,
-  }));
-
-  const handleSelectChange = (selectedOptions) => {
-    // selectedOptions es un array de objetos { value, label }
-    const selectedDoctorIds = selectedOptions.map((option) => option.value);
-    setFormData({
-      ...formData,
-      doctores: selectedDoctorIds,
-    });
-  };
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -58,18 +35,17 @@ export default function ProcedimientosPage() {
         authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
       });
 
-      // Fetch all procedures
-      const procedimientosRes = await api.get("procedimientos/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const [procedimientosRes, doctoresRes] = await Promise.all([
+        api.get("procedimientos/", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        api.get("doctores/", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
       setProcedimientos(procedimientosRes.data);
-
-      // Fetch all doctors
-      const doctoresRes = await api.get("doctores/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
       setDoctores(doctoresRes.data);
-
       setLoading(false);
     } catch (err) {
       console.error("Error al cargar los datos:", err);
@@ -92,7 +68,7 @@ export default function ProcedimientosPage() {
       descripcion: procedimiento?.descripcion || "",
       duracion_min: procedimiento?.duracion_min || 30,
       activo: procedimiento?.activo ?? true,
-      imagen: null,
+      imagen: null, // Reset image input when opening modal
       doctores: procedimiento?.doctores || [],
     });
     setShowModal(true);
@@ -112,26 +88,20 @@ export default function ProcedimientosPage() {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files, options } = e.target;
+    const { name, value, type, checked, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]:
+        type === "checkbox" ? checked : type === "file" ? files[0] : value,
+    });
+  };
 
-    if (name === "doctores") {
-      // Logic to handle multi-select input for doctors
-      const selectedOptions = Array.from(options)
-        .filter((option) => option.selected)
-        .map((option) => parseInt(option.value, 10));
-
-      setFormData({
-        ...formData,
-        [name]: selectedOptions,
-      });
-    } else {
-      // Logic for all other input types
-      setFormData({
-        ...formData,
-        [name]:
-          type === "checkbox" ? checked : type === "file" ? files[0] : value,
-      });
-    }
+  const handleSelectChange = (selectedOptions) => {
+    const selectedDoctorIds = selectedOptions.map((option) => option.value);
+    setFormData({
+      ...formData,
+      doctores: selectedDoctorIds,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -174,7 +144,7 @@ export default function ProcedimientosPage() {
         });
       }
       handleCloseModal();
-      fetchAllData();
+      fetchAllData(); // Refresh data
     } catch (err) {
       console.error("Error al guardar el procedimiento:", err);
       setError("Error al guardar el procedimiento.");
@@ -197,7 +167,7 @@ export default function ProcedimientosPage() {
       await api.delete(`procedimientos/${id}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchAllData();
+      fetchAllData(); // Refresh data
     } catch (err) {
       console.error("Error al eliminar el procedimiento:", err);
       setError("Error al eliminar el procedimiento.");
@@ -205,8 +175,15 @@ export default function ProcedimientosPage() {
     }
   };
 
+  // Transforma los datos de los doctores para que sean compatibles con react-select
+  const doctorOptions = doctores.map((d) => ({
+    value: d.id,
+    label: `${d.nombre} - ${d.especialidad}`,
+  }));
+
   return (
     <div className="d-flex vh-100 bg-light font-sans">
+      {/* CSS Styles - Consider moving this to a dedicated CSS file if used across components, or a utility file. */}
       <style>
         {`
             .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -216,8 +193,8 @@ export default function ProcedimientosPage() {
                 object-fit: contain;
             }
             .image-preview-modal {
-                max-width: 2500px;
-                max-height: 2500px;
+                max-width: 2500px; /* Reduced for practicality in modal */
+                max-height: 2500px; /* Reduced for practicality in modal */
                 object-fit: contain;
             }
             `}
@@ -242,180 +219,35 @@ export default function ProcedimientosPage() {
           </Col>
         </Row>
 
-        <Card className="shadow-sm">
-          <Card.Body>
-            {loading ? (
-              <div className="text-center p-5">
-                <Spinner animation="border" variant="primary" />
-                <p className="mt-2 text-primary">Cargando procedimientos...</p>
-              </div>
-            ) : error ? (
-              <Alert variant="danger" className="text-center">
-                {error}
-              </Alert>
-            ) : (
-              <Table striped bordered hover responsive>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Imagen</th>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Duración (min)</th>
-                    <th>Doctores</th>
-                    <th>Activo</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {procedimientos.length > 0 ? (
-                    procedimientos.map((p) => (
-                      <tr key={p.id}>
-                        <td>{p.id}</td>
-                        <td>
-                          {p.imagen && (
-                            <img
-                              src={p.imagen}
-                              alt={p.nombre}
-                              className="image-preview"
-                            />
-                          )}
-                        </td>
-                        <td>{p.nombre}</td>
-                        <td>{p.descripcion}</td>
-                        <td>{p.duracion_min}</td>
-                        <td>
-                          {p.doctores_nombres?.length > 0
-                            ? p.doctores_nombres.join(", ")
-                            : "Ninguno"}
-                        </td>
-                        <td>{p.activo ? "Sí" : "No"}</td>
-                        <td>
-                          <Button
-                            variant="info"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleOpenModal(p)}
-                          >
-                            <MdEdit />
-                          </Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDelete(p.id)}
-                          >
-                            <MdDelete />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="8" className="text-center text-muted">
-                        No hay procedimientos registrados.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-            )}
-          </Card.Body>
-        </Card>
+        {loading ? (
+          <div className="text-center p-5">
+            <Spinner animation="border" variant="primary" />
+            <p className="mt-2 text-primary">Cargando procedimientos...</p>
+          </div>
+        ) : error ? (
+          <Alert variant="danger" className="text-center">
+            {error}
+          </Alert>
+        ) : (
+          <ProcedimientosTable
+            procedimientos={procedimientos}
+            onEdit={handleOpenModal}
+            onDelete={handleDelete}
+          />
+        )}
       </Container>
 
-      {/* Modal for Creating/Editing Procedure */}
-      <Modal size="xl" show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {isEditing ? "Editar Procedimiento" : "Nuevo Procedimiento"}
-          </Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleSubmit}>
-          <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Nombre</Form.Label>
-              <Form.Control
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Descripción</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Duración (minutos)</Form.Label>
-              <Form.Control
-                type="number"
-                name="duracion_min"
-                value={formData.duracion_min}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Activo"
-                name="activo"
-                checked={formData.activo}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Doctores que realizan este procedimiento</Form.Label>
-              <Select
-                isMulti
-                name="doctores"
-                options={doctorOptions}
-                className="basic-multi-select"
-                classNamePrefix="select"
-                onChange={handleSelectChange}
-                value={doctorOptions.filter((option) =>
-                  formData.doctores.includes(option.value)
-                )}
-              />
-              <Form.Text className="text-muted">
-                Selecciona o elimina doctores de la lista.
-              </Form.Text>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Imagen</Form.Label>
-              <Form.Control type="file" name="imagen" onChange={handleChange} />
-            </Form.Group>
-
-            {isEditing && currentProcedimiento?.imagen && (
-              <div className="mb-3 text-center">
-                <p className="mb-1">Imagen actual:</p>
-                <img
-                  src={currentProcedimiento.imagen}
-                  alt="Actual"
-                  className="image-preview-modal border rounded"
-                />
-              </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
-              Cancelar
-            </Button>
-            <Button variant="primary" type="submit">
-              Guardar
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
+      <ProcedimientoFormModal
+        show={showModal}
+        onHide={handleCloseModal}
+        isEditing={isEditing}
+        currentProcedimiento={currentProcedimiento}
+        formData={formData}
+        handleChange={handleChange}
+        handleSelectChange={handleSelectChange}
+        handleSubmit={handleSubmit}
+        doctorOptions={doctorOptions}
+      />
     </div>
   );
 }

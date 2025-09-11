@@ -1,15 +1,11 @@
+// src/pages/PatientsAdmin.js
+
 import { useAuth0 } from "@auth0/auth0-react";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Button,
-  Container,
-  Form,
-  InputGroup,
-  Spinner,
-  Table,
-} from "react-bootstrap";
-import { MdSearch } from "react-icons/md";
+import { Container, Spinner } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
+import PatientSearchBar from "../components/admin/patients/PatientSearchBar"; // Nuevo
+import PatientsTable from "../components/admin/patients/PatientsTable"; // Nuevo
 
 // Importa los estilos de Bootstrap
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -60,10 +56,6 @@ export default function PatientsAdmin() {
     fetchPatients(searchTerm);
   }, [fetchPatients, searchTerm]);
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
   return (
     <div className="d-flex vh-100 bg-light font-sans">
       <Sidebar userRole="admin" />
@@ -78,18 +70,10 @@ export default function PatientsAdmin() {
           </div>
 
           <div className="card shadow-sm p-4">
-            <div className="mb-3">
-              <InputGroup>
-                <Form.Control
-                  placeholder="Buscar pacientes por nombre, apellido o email..."
-                  onChange={handleSearchChange}
-                  value={searchTerm}
-                />
-                <Button variant="outline-secondary">
-                  <MdSearch />
-                </Button>
-              </InputGroup>
-            </div>
+            <PatientSearchBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+            />
 
             {loading ? (
               <div className="d-flex justify-content-center my-5">
@@ -100,42 +84,7 @@ export default function PatientsAdmin() {
             ) : error ? (
               <div className="alert alert-danger text-center">{error}</div>
             ) : (
-              <Table striped bordered hover responsive className="mb-0">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
-                    <th>Fecha de Registro</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {patients.length > 0 ? (
-                    patients.map((patient) => (
-                      <tr key={patient.id}>
-                        <td>{patient.id}</td>
-                        <td>{patient.nombre}</td>
-                        <td>{patient.apellido}</td>
-                        <td>{patient.email}</td>
-                        <td>{patient.telefono || "-"}</td>
-                        <td>
-                          {new Date(
-                            patient.fecha_registro
-                          ).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="text-center text-secondary">
-                        No se encontraron pacientes.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
+              <PatientsTable patients={patients} />
             )}
           </div>
         </Container>

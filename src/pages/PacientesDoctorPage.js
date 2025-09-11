@@ -3,8 +3,9 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useCallback, useEffect, useState } from "react";
-import { Card, Table } from "react-bootstrap";
+import { Card } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
+import DoctorPatientsTable from "../components/doctor/patients/DoctorPatientsTable"; // Seguimos usando el componente modular
 import { api } from "../services/api";
 
 export default function PacientesDoctorPage() {
@@ -21,15 +22,14 @@ export default function PacientesDoctorPage() {
         },
       });
 
-      // Fetch all reservations for the current doctor
+      // Fetch all reservations (as per the original logic)
       const reservationsRes = await api.get("reservas/", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Get the reservations data
       const reservations = reservationsRes.data;
 
-      // Extract unique patients from the reservations
+      // Extract unique patients from ALL reservations
       const uniquePatients = {};
       reservations.forEach((reservation) => {
         if (!uniquePatients[reservation.paciente.id]) {
@@ -37,7 +37,6 @@ export default function PacientesDoctorPage() {
         }
       });
 
-      // Convert the uniquePatients object into an array
       const patientsArray = Object.values(uniquePatients);
 
       setPatients(patientsArray);
@@ -47,7 +46,7 @@ export default function PacientesDoctorPage() {
       setError("Error al cargar la lista de pacientes.");
       setLoading(false);
     }
-  }, [getAccessTokenSilently]);
+  }, [getAccessTokenSilently]); // <-- 'user' ya no es una dependencia aquí
 
   useEffect(() => {
     fetchPatients();
@@ -69,34 +68,8 @@ export default function PacientesDoctorPage() {
             ) : error ? (
               <div className="text-center text-danger">{error}</div>
             ) : (
-              <Table striped bordered hover responsive>
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {patients.length > 0 ? (
-                    patients.map((patient) => (
-                      <tr key={patient.id}>
-                        <td>
-                          {patient.user.first_name} {patient.user.last_name}
-                        </td>
-                        <td>{patient.user.email}</td>
-                        <td>{patient.telefono || "N/A"}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" className="text-center text-muted">
-                        No hay pacientes registrados.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
+              // Usamos el componente DoctorPatientsTable aquí
+              <DoctorPatientsTable patients={patients} />
             )}
           </Card.Body>
         </Card>
