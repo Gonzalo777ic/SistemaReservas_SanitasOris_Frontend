@@ -1,51 +1,81 @@
-// src/components/reservas/ProcedimientosCarousel.js DUMMY
+import PropTypes from "prop-types";
 import { useState } from "react";
+import { Button, Card, Carousel } from "react-bootstrap";
 
-export default function ProcedimientosCarousel({ procedimientos, onSelect }) {
-  const [seleccionado, setSeleccionado] = useState(null);
+const ProcedimientosCarousel = ({ procedimientos, onSelect }) => {
+  const [index, setIndex] = useState(0);
 
-  const handleSelect = (proc) => {
-    setSeleccionado(proc.id);
-    onSelect(proc); // se pasa al padre
+  const handleSelect = (selectedIndex) => {
+    setIndex(selectedIndex);
+    onSelect(procedimientos[selectedIndex]);
   };
 
-  // 👈 Manejar el caso de que no haya procedimientos
   if (!procedimientos || procedimientos.length === 0) {
     return <p>No hay procedimientos disponibles.</p>;
   }
 
   return (
-    <div>
-      <h3>Selecciona un procedimiento</h3>
-      <div style={{ display: "flex", gap: "1rem", overflowX: "auto" }}>
-        {/* 👈 Usar la prop 'procedimientos' para renderizar */}
-        {procedimientos.map((proc) => (
-          <div
-            key={proc.id}
-            onClick={() => handleSelect(proc)}
-            style={{
-              minWidth: "150px",
-              padding: "1rem",
-              border:
-                seleccionado === proc.id
-                  ? "3px solid #27ae60"
-                  : "1px solid #ccc",
-              borderRadius: "10px",
-              cursor: "pointer",
-              textAlign: "center",
-            }}
-          >
-            {/* Puedes usar una imagen por defecto o un icono si proc.img no existe */}
-            <img
-              src={proc.img || "/img/default.png"}
-              alt={proc.nombre}
-              width="100"
-            />
-            <p>{proc.nombre}</p>
-            <small>{proc.duracion_min} min</small>
-          </div>
+    <>
+      <style>
+        {`
+                .carousel-item-img {
+                    height: 200px;
+                    object-fit: contain;
+                }
+                .carousel-item {
+                    text-align: center;
+                }
+                .carousel-control-prev-icon, .carousel-control-next-icon {
+                    background-color: #333;
+                    border-radius: 50%;
+                }
+                `}
+      </style>
+      <Carousel activeIndex={index} onSelect={handleSelect} interval={null}>
+        {procedimientos.map((p, idx) => (
+          <Carousel.Item key={p.id}>
+            <Card className="text-center shadow-sm">
+              <Card.Body>
+                <img
+                  className="d-block w-100 carousel-item-img mb-3"
+                  src={
+                    p.imagen ||
+                    "https://via.placeholder.com/200?text=Sin+Imagen"
+                  }
+                  alt={p.nombre}
+                />
+                <Card.Title>{p.nombre}</Card.Title>
+                <Card.Text>{p.descripcion}</Card.Text>
+                <Card.Text>
+                  <small className="text-muted">{p.duracion_min} min</small>
+                </Card.Text>
+                <Button
+                  variant={index === idx ? "primary" : "outline-primary"}
+                  onClick={() => handleSelect(idx)}
+                >
+                  {index === idx ? "Seleccionado" : "Seleccionar"}
+                </Button>
+              </Card.Body>
+            </Card>
+          </Carousel.Item>
         ))}
-      </div>
-    </div>
+      </Carousel>
+    </>
   );
-}
+};
+
+ProcedimientosCarousel.propTypes = {
+  procedimientos: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      nombre: PropTypes.string.isRequired,
+      descripcion: PropTypes.string,
+      duracion_min: PropTypes.number,
+      activo: PropTypes.bool,
+      imagen: PropTypes.string,
+    })
+  ).isRequired,
+  onSelect: PropTypes.func.isRequired,
+};
+
+export default ProcedimientosCarousel;

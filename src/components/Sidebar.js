@@ -22,6 +22,11 @@ const doctorLinks = [
   { name: "Dashboard", href: "/dashboard-doctor", icon: MdDashboard },
   { name: "Horario", href: "/horario-doctor", icon: MdDashboard },
   { name: "Mis pacientes", href: "/pacientes-doctor", icon: MdPeople },
+  {
+    name: "Mis procedimientos",
+    href: "/procedimientos-doctor",
+    icon: MdPeople,
+  },
   { name: "Citas", href: "/citas", icon: MdDateRange },
   { name: "Perfil", href: "/perfil", icon: MdPerson },
 ];
@@ -34,8 +39,6 @@ const patientLinks = [
 ];
 
 const Sidebar = ({ userRole }) => {
-  // 👈 Eliminamos el valor por defecto aquí
-  // 👈 Obtenemos los links del objeto y usamos un array vacío como fallback
   const links =
     {
       admin: adminLinks,
@@ -46,7 +49,7 @@ const Sidebar = ({ userRole }) => {
   return (
     <aside
       className="bg-white shadow-sm d-flex flex-column"
-      style={{ width: "200px" }}
+      style={{ width: "250px" }}
     >
       <div className="p-3 border-bottom border-secondary-subtle">
         <img

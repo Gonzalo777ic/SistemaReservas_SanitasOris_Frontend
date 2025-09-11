@@ -1,7 +1,7 @@
 // src/components/PrivateRoute.js
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom"; // Import useNavigate
 
 export default function PrivateRoute({ allowedRoles }) {
   const {
@@ -12,11 +12,12 @@ export default function PrivateRoute({ allowedRoles }) {
   } = useAuth0();
   const [role, setRole] = useState(null);
   const [loadingRole, setLoadingRole] = useState(true);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchRole = async () => {
       if (!isAuthenticated) return;
-      setLoadingRole(true); // <--- Aseguramos que el estado de carga esté en true
+      setLoadingRole(true);
       try {
         const token = await getAccessTokenSilently({
           authorizationParams: {
@@ -29,10 +30,10 @@ export default function PrivateRoute({ allowedRoles }) {
         });
 
         const data = await res.json();
-        console.log("👤 whoami FRONT:", data);
         setRole(data.role);
       } catch (err) {
         console.error("❌ Error obteniendo rol:", err);
+        // Optionally, navigate to an error page or logout if role fetching fails
       } finally {
         setLoadingRole(false);
       }
@@ -41,13 +42,38 @@ export default function PrivateRoute({ allowedRoles }) {
     fetchRole();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  if (isLoading) return <div>Cargando...</div>;
+  if (isLoading || loadingRole) return <div>Cargando...</div>;
 
   if (!isAuthenticated) {
     loginWithRedirect();
     return null;
   }
 
-  // Ahora, siempre pasamos el estado de carga junto con el rol
+  // --- NEW RBAC LOGIC ---
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    console.warn(
+      `Access Denied: User role "${role}" not in allowed roles [${allowedRoles.join(
+        ", "
+      )}]. Redirecting...`
+    );
+    // Redirect to a dashboard or a "not authorized" page
+    // You could make this more intelligent, e.g., redirect to their own dashboard
+    switch (role) {
+      case "admin":
+        navigate("/dashboard-admin");
+        break;
+      case "doctor":
+        navigate("/dashboard-doctor");
+        break;
+      case "paciente":
+        navigate("/dashboard-paciente");
+        break;
+      default:
+        navigate("/"); // Fallback to root or a generic unauthorized page
+    }
+    return null; // Don't render anything while redirecting
+  }
+  // --- END NEW RBAC LOGIC ---
+
   return <Outlet context={{ role, loadingRole }} />;
 }
