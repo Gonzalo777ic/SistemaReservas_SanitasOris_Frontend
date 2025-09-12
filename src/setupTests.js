@@ -1,5 +1,30 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
-// expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
+// src/setupTests.js
+import "@testing-library/jest-dom";
+
+// Polyfill for TextEncoder/TextDecoder for Jest
+import { TextDecoder, TextEncoder } from "util";
+if (typeof global.TextEncoder === "undefined") {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === "undefined") {
+  global.TextDecoder = TextDecoder;
+}
+
+// Mock for window.crypto required by Auth0
+Object.defineProperty(global.window, "crypto", {
+  value: {
+    getRandomValues: (arr) => {
+      // You can just fill the array with a predictable pattern
+      // or a random one, depending on your needs. A simple fill is enough for a mock.
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = Math.floor(Math.random() * 256);
+      }
+      return arr;
+    },
+    subtle: {
+      // Auth0 might also use subtle, so it's good to include it.
+      // You can add more mock functions here if other errors pop up,
+      // but getRandomValues is usually the main one needed.
+    },
+  },
+});

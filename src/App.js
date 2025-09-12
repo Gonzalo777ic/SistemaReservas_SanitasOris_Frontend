@@ -1,5 +1,4 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom"; // Deja solo esta línea
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 import RedirectByRole from "./components/RedirectByRole";
@@ -20,7 +19,7 @@ import UsersAdmin from "./pages/UsersAdmin";
 
 function App() {
   return (
-    <Router>
+    <>
       <Navbar />
       <UserSync />
       <Routes>
@@ -62,7 +61,7 @@ function App() {
           <Route path="/procedimientos" element={<ProcedimientosPage />} />
         </Route>
       </Routes>
-    </Router>
+    </>
   );
 }
 

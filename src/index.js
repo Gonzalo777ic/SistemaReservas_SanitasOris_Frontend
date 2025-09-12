@@ -1,6 +1,7 @@
 import { Auth0Provider } from "@auth0/auth0-react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom"; // Importa BrowserRouter
 import App from "./App";
 
 const container = document.getElementById("root");
@@ -15,6 +16,8 @@ root.render(
       audience: process.env.REACT_APP_AUTH0_AUDIENCE,
     }}
   >
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </Auth0Provider>
 );

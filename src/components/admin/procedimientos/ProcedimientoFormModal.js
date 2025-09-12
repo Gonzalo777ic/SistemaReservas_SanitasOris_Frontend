@@ -21,11 +21,12 @@ const ProcedimientoFormModal = ({
           {isEditing ? "Editar Procedimiento" : "Nuevo Procedimiento"}
         </Modal.Title>
       </Modal.Header>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} data-testid="procedimiento-form">
         <Modal.Body>
           <Form.Group className="mb-3">
-            <Form.Label>Nombre</Form.Label>
+            <Form.Label htmlFor="nombre-input">Nombre</Form.Label>
             <Form.Control
+              id="nombre-input"
               type="text"
               name="nombre"
               value={formData.nombre}
@@ -33,9 +34,11 @@ const ProcedimientoFormModal = ({
               required
             />
           </Form.Group>
+          {/* Descripción */}
           <Form.Group className="mb-3">
-            <Form.Label>Descripción</Form.Label>
+            <Form.Label htmlFor="descripcion-input">Descripción</Form.Label>
             <Form.Control
+              id="descripcion-input"
               as="textarea"
               rows={3}
               name="descripcion"
@@ -43,9 +46,11 @@ const ProcedimientoFormModal = ({
               onChange={handleChange}
             />
           </Form.Group>
+          {/* Duración */}
           <Form.Group className="mb-3">
-            <Form.Label>Duración (minutos)</Form.Label>
+            <Form.Label htmlFor="duracion-input">Duración (minutos)</Form.Label>
             <Form.Control
+              id="duracion-input"
               type="number"
               name="duracion_min"
               value={formData.duracion_min}
@@ -53,8 +58,10 @@ const ProcedimientoFormModal = ({
               required
             />
           </Form.Group>
+          {/* Activo (checkbox) */}
           <Form.Group className="mb-3">
             <Form.Check
+              id="activo-check" // Añade el ID al Form.Check
               type="checkbox"
               label="Activo"
               name="activo"
@@ -62,10 +69,13 @@ const ProcedimientoFormModal = ({
               onChange={handleChange}
             />
           </Form.Group>
-
+          {/* Doctores */}
           <Form.Group className="mb-3">
-            <Form.Label>Doctores que realizan este procedimiento</Form.Label>
+            <Form.Label htmlFor="doctores-select">
+              Doctores que realizan este procedimiento
+            </Form.Label>
             <Select
+              inputId="doctores-select" // React-select usa inputId
               isMulti
               name="doctores"
               options={doctorOptions}
@@ -80,10 +90,15 @@ const ProcedimientoFormModal = ({
               Selecciona o elimina doctores de la lista.
             </Form.Text>
           </Form.Group>
-
+          {/* Imagen */}
           <Form.Group className="mb-3">
-            <Form.Label>Imagen</Form.Label>
-            <Form.Control type="file" name="imagen" onChange={handleChange} />
+            <Form.Label htmlFor="imagen-input">Imagen</Form.Label>
+            <Form.Control
+              id="imagen-input"
+              type="file"
+              name="imagen"
+              onChange={handleChange}
+            />
           </Form.Group>
 
           {isEditing && currentProcedimiento?.imagen && !formData.imagen && (
