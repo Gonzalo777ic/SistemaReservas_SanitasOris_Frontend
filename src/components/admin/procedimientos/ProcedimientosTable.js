@@ -49,6 +49,7 @@ const ProcedimientosTable = ({ procedimientos, onEdit, onDelete }) => {
                       size="sm"
                       className="me-2"
                       onClick={() => onEdit(p)}
+                      aria-label={`Editar ${p.nombre}`} // <-- ADD THIS LINE
                     >
                       <MdEdit />
                     </Button>
@@ -56,6 +57,7 @@ const ProcedimientosTable = ({ procedimientos, onEdit, onDelete }) => {
                       variant="danger"
                       size="sm"
                       onClick={() => onDelete(p.id)}
+                      aria-label={`Eliminar ${p.nombre}`} // <-- ADD THIS LINE
                     >
                       <MdDelete />
                     </Button>
