@@ -125,12 +125,16 @@ const CitasModals = ({
       </Modal>
 
       {/* Modal de notas (reutilizamos el componente AddNotesModal) */}
-      {selectedReserva && (
+      {showNotesModal && selectedReserva && (
         <AddNotesModal
-          show={showNotesModal}
+          show={true}
           onHide={() => setShowNotesModal(false)}
           reserva={selectedReserva}
-          token={getAccessTokenSilently()}
+          token={
+            typeof getAccessTokenSilently === "function"
+              ? getAccessTokenSilently()
+              : getAccessTokenSilently
+          }
           onNotesAdded={onNotesAdded}
         />
       )}
