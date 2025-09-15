@@ -47,6 +47,7 @@ const HorarioTable = ({ horarios, onEdit, onDelete, onToggleActive }) => {
                     size="sm"
                     className="me-2"
                     onClick={() => onEdit(horario)}
+                    aria-label="Editar horario"
                   >
                     <MdEdit />
                   </Button>
@@ -54,6 +55,7 @@ const HorarioTable = ({ horarios, onEdit, onDelete, onToggleActive }) => {
                     variant="outline-danger"
                     size="sm"
                     onClick={() => onDelete(horario)}
+                    aria-label="Eliminar horario"
                   >
                     <MdDelete />
                   </Button>
