@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import AppointmentItem from "./AppointmentItem";
 
 describe("AppointmentItem", () => {
@@ -56,8 +58,13 @@ describe("AppointmentItem", () => {
     // Check for the doctor's name
     expect(screen.getByText("Cita con Dr(a). Ana")).toBeInTheDocument();
 
-    // Ahora usamos un regex para encontrar la fecha y hora correctas (05:00 debido a la conversión de zona horaria)
-    expect(screen.getByText(/15 noviembre 2023 05:00/)).toBeInTheDocument();
+    // Validamos la fecha y hora sin depender de la zona horaria del entorno
+    const expectedTime = format(
+      new Date(mockCitaConfirmed.fecha_hora),
+      "dd MMMM yyyy HH:mm",
+      { locale: es }
+    );
+    expect(screen.getByText(expectedTime)).toBeInTheDocument();
 
     // Check for procedure and notes
     expect(screen.getByText("Limpieza Dental")).toBeInTheDocument();
