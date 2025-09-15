@@ -1,5 +1,3 @@
-// src/components/citas/CitasTable.js
-
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge, Button, Table } from "react-bootstrap";
@@ -96,6 +94,7 @@ const CitasTable = ({
                         variant="success"
                         size="sm"
                         onClick={() => handleShowConfirmModal(reserva)}
+                        aria-label="Confirmar"
                       >
                         <MdCheckCircle />
                       </Button>
@@ -103,6 +102,7 @@ const CitasTable = ({
                         variant="danger"
                         size="sm"
                         onClick={() => handleShowCancelModal(reserva)}
+                        aria-label="Cancelar"
                       >
                         <MdCancel />
                       </Button>
@@ -112,6 +112,7 @@ const CitasTable = ({
                     variant="info"
                     size="sm"
                     onClick={() => handleShowDetails(reserva)}
+                    aria-label="Detalles"
                   >
                     <MdInfo />
                   </Button>
@@ -119,6 +120,7 @@ const CitasTable = ({
                     variant="secondary"
                     size="sm"
                     onClick={() => handleShowNotesModal(reserva)}
+                    aria-label="Notas"
                   >
                     <MdEditNote />
                   </Button>
