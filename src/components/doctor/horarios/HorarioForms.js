@@ -1,7 +1,5 @@
-// src/components/doctor/horarios/HorarioForms.js
-
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
-import { DIAS_SEMANA_MAP } from "../.././../pages/HorarioDoctorPage"; // Import from the parent or define locally if only for this form
+import { DIAS_SEMANA_MAP } from "../../../pages/HorarioDoctorPage";
 
 const HorarioForms = ({
   show,
@@ -19,11 +17,12 @@ const HorarioForms = ({
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} data-testid="horario-form">
           <Form.Group className="mb-3">
-            <Form.Label>Día de la semana</Form.Label>
+            <Form.Label htmlFor="dia_semana">Día de la semana</Form.Label>
             <Form.Control
               as="select"
+              id="dia_semana"
               name="dia_semana"
               value={form.dia_semana}
               onChange={handleInputChange}
@@ -38,8 +37,9 @@ const HorarioForms = ({
           <Row className="mb-3">
             <Col>
               <Form.Group>
-                <Form.Label>Hora de inicio</Form.Label>
+                <Form.Label htmlFor="hora_inicio">Hora de inicio</Form.Label>
                 <Form.Control
+                  id="hora_inicio"
                   type="time"
                   name="hora_inicio"
                   value={form.hora_inicio}
@@ -49,8 +49,9 @@ const HorarioForms = ({
             </Col>
             <Col>
               <Form.Group>
-                <Form.Label>Hora de fin</Form.Label>
+                <Form.Label htmlFor="hora_fin">Hora de fin</Form.Label>
                 <Form.Control
+                  id="hora_fin"
                   type="time"
                   name="hora_fin"
                   value={form.hora_fin}

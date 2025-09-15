@@ -5,11 +5,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useCallback, useEffect, useState } from "react";
 import { Card } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
-import HorarioCalendar from "../components/doctor/horarios/HorarioCalendar"; // New
-import HorarioConfirmationModals from "../components/doctor/horarios/HorarioConfirmationModals"; // New
-import HorarioForms from "../components/doctor/horarios/HorarioForms"; // New
-import HorarioTable from "../components/doctor/horarios/HorarioTable"; // New
-import HorarioTemplates from "../components/doctor/horarios/HorarioTemplates"; // New
+import HorarioCalendar from "../components/doctor/horarios/HorarioCalendar";
+import HorarioConfirmationModals from "../components/doctor/horarios/HorarioConfirmationModals";
+import HorarioForms from "../components/doctor/horarios/HorarioForms";
+import HorarioTable from "../components/doctor/horarios/HorarioTable";
+import HorarioTemplates from "../components/doctor/horarios/HorarioTemplates";
 import { api } from "../services/api";
 import "./styles.css";
 
@@ -267,15 +267,30 @@ export default function HorarioDoctorPage() {
   };
 
   // --- Modal Control Functions ---
-  const handleOpenAddEditModal = (horario = null) => {
+  const handleOpenAddEditModal = (horario = null, slotInfo = null) => {
     if (horario) {
+      // Logic for editing an existing schedule
       setCurrentEdit(horario);
       setForm({
         dia_semana: horario.dia_semana,
         hora_inicio: horario.hora_inicio,
         hora_fin: horario.hora_fin,
       });
+    } else if (slotInfo) {
+      // Logic for adding a new schedule from the calendar
+      setCurrentEdit(null);
+      // Format the dates to "HH:mm" strings
+      const diaSemana =
+        slotInfo.start.getDay() === 0 ? 6 : slotInfo.start.getDay() - 1;
+      const horaInicio = slotInfo.start.toTimeString().slice(0, 5);
+      const horaFin = slotInfo.end.toTimeString().slice(0, 5);
+      setForm({
+        dia_semana: diaSemana,
+        hora_inicio: horaInicio,
+        hora_fin: horaFin,
+      });
     } else {
+      // Logic for adding a new schedule from the button
       setCurrentEdit(null);
       setForm({ dia_semana: 0, hora_inicio: "", hora_fin: "" });
     }
@@ -306,7 +321,9 @@ export default function HorarioDoctorPage() {
           <Card.Body>
             <HorarioCalendar
               horarios={horarios}
-              onSelectSlot={handleOpenAddEditModal}
+              onSelectSlot={(slotInfo) =>
+                handleOpenAddEditModal(null, slotInfo)
+              }
               onSelectEvent={(event) => {
                 const horario = horarios.find((h) => h.id === event.resourceId);
                 if (horario) {
