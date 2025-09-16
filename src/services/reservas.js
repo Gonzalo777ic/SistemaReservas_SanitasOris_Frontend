@@ -5,7 +5,7 @@ export const getReservas = async (token) => {
   try {
     const response = await api.get("reservas/", {
       headers: {
-        Authorization: `Bearer ${token}`, // ✅ ahora sí usas el token recibido
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data;
