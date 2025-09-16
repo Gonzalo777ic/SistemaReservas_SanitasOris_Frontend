@@ -100,7 +100,6 @@ export default function HorarioDoctorPage() {
     fetchHorariosAndTemplates();
   }, [fetchHorariosAndTemplates]);
 
-  // --- CRUD Handlers for individual schedules ---
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
