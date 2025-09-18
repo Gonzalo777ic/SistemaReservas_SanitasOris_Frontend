@@ -14,8 +14,6 @@ if (typeof global.TextDecoder === "undefined") {
 Object.defineProperty(global.window, "crypto", {
   value: {
     getRandomValues: (arr) => {
-      // You can just fill the array with a predictable pattern
-      // or a random one, depending on your needs. A simple fill is enough for a mock.
       for (let i = 0; i < arr.length; i++) {
         arr[i] = Math.floor(Math.random() * 256);
       }
